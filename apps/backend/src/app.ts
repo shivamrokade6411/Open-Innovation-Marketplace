@@ -1,0 +1,38 @@
+/*
+ * Purpose: Express application bootstrap.
+ * Author: Copilot
+ * Date: 2026-06-28
+ */
+
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import compression from 'compression';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import { globalRateLimiter } from './middleware/rateLimiter.middleware';
+import { errorHandler } from './middleware/errorHandler.middleware';
+import { authRouter } from './routes/auth.routes';
+import { challengeRouter } from './routes/challenge.routes';
+import { submissionRouter } from './routes/submission.routes';
+
+export const app = express();
+
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors({ origin: process.env.FRONTEND_URL ?? '*', credentials: true }));
+app.use(compression());
+app.use(morgan('combined'));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(globalRateLimiter);
+
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({ success: true, message: 'OK', data: { status: 'healthy' } });
+});
+
+app.use('/api/auth', authRouter);
+app.use('/api/challenges', challengeRouter);
+app.use('/api/submissions', submissionRouter);
+
+app.use(errorHandler);

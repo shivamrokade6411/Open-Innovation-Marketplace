@@ -1,0 +1,13 @@
+{
+  "name": "@oim/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/types/index.ts",
+  "types": "src/types/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "echo 'shared lint'",
+    "test": "echo 'shared test'",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}
