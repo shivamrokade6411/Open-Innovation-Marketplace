@@ -5,7 +5,7 @@
   "packageManager": "pnpm@9.6.0",
   "scripts": {
     "dev": "turbo run dev --parallel",
-    "build": "turbo run build --filter=frontend"
+    "build": "turbo run build --filter=frontend",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck"
