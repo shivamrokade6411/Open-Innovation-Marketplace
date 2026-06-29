@@ -2,7 +2,7 @@
   "name": "open-innovation-marketplace",
   "private": true,
   "version": "1.0.0",
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@9.6.0",
   "scripts": {
     "dev": "turbo run dev --parallel",
     "build": "turbo run build --filter=frontend"
