@@ -41,4 +41,4 @@ challengeSchema.index({ title: 'text', description: 'text', tags: 'text' });
 challengeSchema.index({ status: 1, deadline: 1 });
 challengeSchema.index({ category: 1, difficulty: 1 });
 
-export const Challenge = mongoose.model<IChallenge>('Challenge', challengeSchema);
+export const Challenge = mongoose.models.Challenge || mongoose.model<IChallenge>('Challenge', challengeSchema);

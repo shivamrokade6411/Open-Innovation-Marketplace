@@ -18,13 +18,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": [
         "src/*"
       ],
       "@oim/shared": [
-        "../../packages/shared/src"
+        "../../packages/shared/src/index.ts"
       ],
       "@oim/shared/*": [
         "../../packages/shared/src/*"

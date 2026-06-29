@@ -30,4 +30,4 @@ const teamSchema = new Schema<ITeam>(
 teamSchema.index({ challengeId: 1 });
 teamSchema.index({ leaderId: 1 });
 
-export const Team = mongoose.model<ITeam>('Team', teamSchema);
+export const Team = mongoose.models.Team || mongoose.model<ITeam>('Team', teamSchema);

@@ -96,4 +96,4 @@ userSchema.static('findByEmail', async function findByEmail(email: string): Prom
   return this.findOne({ email }).select('+passwordHash').exec();
 });
 
-export const User = mongoose.model<IUser, IUserModel>('User', userSchema);
+export const User = mongoose.models.User || mongoose.model<IUser, IUserModel>('User', userSchema);

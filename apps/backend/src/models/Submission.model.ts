@@ -42,4 +42,4 @@ submissionSchema.index({ challengeId: 1, userId: 1 }, { unique: true });
 submissionSchema.index({ status: 1 });
 submissionSchema.index({ score: -1 });
 
-export const Submission = mongoose.model<ISubmission>('Submission', submissionSchema);
+export const Submission = mongoose.models.Submission || mongoose.model<ISubmission>('Submission', submissionSchema);

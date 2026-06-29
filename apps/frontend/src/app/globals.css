@@ -10,7 +10,29 @@ html.dark {
   color-scheme: dark;
 }
 
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.25);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.4);
+}
+
 body {
-  @apply bg-slate-50 text-slate-900 dark:bg-surface-dark dark:text-slate-100;
-  background-image: radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 28%), radial-gradient(circle at top right, rgba(6, 182, 212, 0.12), transparent 24%);
+  @apply bg-surface-light text-slate-900 dark:bg-surface-dark dark:text-slate-100 transition-colors duration-200;
+  background-image: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.04), transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.04), transparent 40%);
+}
+
+.dark body {
+  background-image: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08), transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.06), transparent 40%);
 }

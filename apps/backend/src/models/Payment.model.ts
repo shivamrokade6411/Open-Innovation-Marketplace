@@ -25,4 +25,4 @@ const paymentSchema = new Schema<IPayment>(
 
 paymentSchema.index({ userId: 1 });
 
-export const Payment = mongoose.model<IPayment>('Payment', paymentSchema);
+export const Payment = mongoose.models.Payment || mongoose.model<IPayment>('Payment', paymentSchema);

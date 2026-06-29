@@ -23,4 +23,4 @@ const notificationSchema = new Schema<INotification>(
 notificationSchema.index({ userId: 1, isRead: 1 });
 notificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 90 });
 
-export const Notification = mongoose.model<INotification>('Notification', notificationSchema);
+export const Notification = mongoose.models.Notification || mongoose.model<INotification>('Notification', notificationSchema);
