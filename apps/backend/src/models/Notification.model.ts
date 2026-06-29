@@ -7,7 +7,7 @@
 import mongoose, { Schema } from 'mongoose';
 import type { INotification } from '@oim/shared';
 
-const notificationSchema = new Schema<INotification>(
+const notificationSchema = new Schema<any>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     type: { type: String, enum: ['challenge', 'submission', 'message', 'payment', 'system', 'achievement'], required: true },
@@ -23,4 +23,4 @@ const notificationSchema = new Schema<INotification>(
 notificationSchema.index({ userId: 1, isRead: 1 });
 notificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 90 });
 
-export const Notification = mongoose.models.Notification || mongoose.model<INotification>('Notification', notificationSchema);
+export const Notification: mongoose.Model<INotification> = mongoose.models.Notification || mongoose.model<INotification>('Notification', notificationSchema);

@@ -7,7 +7,7 @@
 import mongoose, { Schema } from 'mongoose';
 import type { ISubmission } from '@oim/shared';
 
-const submissionSchema = new Schema<ISubmission>(
+const submissionSchema = new Schema<any>(
   {
     challengeId: { type: Schema.Types.ObjectId, ref: 'Challenge', required: true, index: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
@@ -42,4 +42,4 @@ submissionSchema.index({ challengeId: 1, userId: 1 }, { unique: true });
 submissionSchema.index({ status: 1 });
 submissionSchema.index({ score: -1 });
 
-export const Submission = mongoose.models.Submission || mongoose.model<ISubmission>('Submission', submissionSchema);
+export const Submission: mongoose.Model<ISubmission> = mongoose.models.Submission || mongoose.model<ISubmission>('Submission', submissionSchema);

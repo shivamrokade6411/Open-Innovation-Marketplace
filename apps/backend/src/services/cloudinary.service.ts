@@ -18,7 +18,7 @@ export interface UploadOptions {
   folder?: string;
   publicId?: string;
   resourceType?: 'image' | 'video' | 'raw' | 'auto';
-  transformation?: unknown;
+  transformation?: any;
 }
 
 /**

@@ -7,7 +7,7 @@
 import mongoose, { Schema } from 'mongoose';
 import type { ITeam } from '@oim/shared';
 
-const teamSchema = new Schema<ITeam>(
+const teamSchema = new Schema<any>(
   {
     name: { type: String, required: true, trim: true },
     challengeId: { type: Schema.Types.ObjectId, ref: 'Challenge', required: true, index: true },
@@ -30,4 +30,4 @@ const teamSchema = new Schema<ITeam>(
 teamSchema.index({ challengeId: 1 });
 teamSchema.index({ leaderId: 1 });
 
-export const Team = mongoose.models.Team || mongoose.model<ITeam>('Team', teamSchema);
+export const Team: mongoose.Model<ITeam> = mongoose.models.Team || mongoose.model<ITeam>('Team', teamSchema);

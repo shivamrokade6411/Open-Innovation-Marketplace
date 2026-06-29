@@ -7,7 +7,7 @@
 import mongoose, { Schema } from 'mongoose';
 import type { IPayment } from '@oim/shared';
 
-const paymentSchema = new Schema<IPayment>(
+const paymentSchema = new Schema<any>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     type: { type: String, enum: ['subscription', 'prize', 'withdrawal'], required: true },
@@ -25,4 +25,4 @@ const paymentSchema = new Schema<IPayment>(
 
 paymentSchema.index({ userId: 1 });
 
-export const Payment = mongoose.models.Payment || mongoose.model<IPayment>('Payment', paymentSchema);
+export const Payment: mongoose.Model<IPayment> = mongoose.models.Payment || mongoose.model<IPayment>('Payment', paymentSchema);

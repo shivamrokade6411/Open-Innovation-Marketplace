@@ -7,7 +7,7 @@
 import mongoose, { Schema } from 'mongoose';
 import type { ICertificate } from '@oim/shared';
 
-const certificateSchema = new Schema<ICertificate>(
+const certificateSchema = new Schema<any>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     challengeId: { type: Schema.Types.ObjectId, ref: 'Challenge', required: true },
@@ -26,4 +26,4 @@ const certificateSchema = new Schema<ICertificate>(
 certificateSchema.index({ certificateNumber: 1 }, { unique: true });
 certificateSchema.index({ userId: 1 });
 
-export const Certificate = mongoose.models.Certificate || mongoose.model<ICertificate>('Certificate', certificateSchema);
+export const Certificate: mongoose.Model<ICertificate> = mongoose.models.Certificate || mongoose.model<ICertificate>('Certificate', certificateSchema);

@@ -7,7 +7,7 @@
 import mongoose, { Schema } from 'mongoose';
 import type { IChallenge } from '@oim/shared';
 
-const challengeSchema = new Schema<IChallenge>(
+const challengeSchema = new Schema<any>(
   {
     companyId: { type: Schema.Types.ObjectId, ref: 'Company', required: true, index: true },
     title: { type: String, required: true, trim: true },
@@ -41,4 +41,4 @@ challengeSchema.index({ title: 'text', description: 'text', tags: 'text' });
 challengeSchema.index({ status: 1, deadline: 1 });
 challengeSchema.index({ category: 1, difficulty: 1 });
 
-export const Challenge = mongoose.models.Challenge || mongoose.model<IChallenge>('Challenge', challengeSchema);
+export const Challenge: mongoose.Model<IChallenge> = mongoose.models.Challenge || mongoose.model<IChallenge>('Challenge', challengeSchema);

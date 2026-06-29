@@ -9,9 +9,13 @@
     "start": "node dist/server.js",
     "lint": "echo 'backend lint'",
     "test": "echo 'backend test'",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "seed": "tsx src/scripts/seed.ts",
+    "seed:reset": "tsx src/scripts/seed.ts",
+    "create-indexes": "tsx src/scripts/createIndexes.ts"
   },
   "dependencies": {
+    "@oim/shared": "workspace:*",
     "bcryptjs": "^2.4.3",
     "bull": "^4.16.5",
     "cloudinary": "^2.5.1",
@@ -36,6 +40,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/compression": "^1.7.5",
     "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -43,6 +49,8 @@
     "@types/morgan": "^1.9.7",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.5.4",
+    "@types/nodemailer": "^6.4.16",
+    "@types/qrcode": "^1.5.5",
     "tsx": "^4.17.0",
     "typescript": "^5.5.4"
   }

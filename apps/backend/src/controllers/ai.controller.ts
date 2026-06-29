@@ -5,6 +5,7 @@
  */
 
 import type { Request, Response } from 'express';
+import type { IUser, IChallenge } from '@oim/shared';
 import { z } from 'zod';
 import { analyzeResume, matchSkills, recommendChallenges, summarizeProposal, generateFeedback } from '../services/ai.service';
 import { Submission } from '../models/Submission.model';
@@ -75,7 +76,7 @@ export async function chatMentor(req: Request, res: Response): Promise<void> {
  */
 export async function matchSkillsController(req: Request, res: Response): Promise<void> {
   const payload = matchSkillsSchema.parse(req.body);
-  const result = await matchSkills(payload.userProfile as { skills: string[] }, payload.challenge as { techStack: string[] });
+  const result = await matchSkills(payload.userProfile as unknown as IUser, payload.challenge as unknown as IChallenge);
   res.status(200).json({ success: true, message: 'Skills matched', data: result });
 }
 

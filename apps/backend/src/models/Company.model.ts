@@ -7,7 +7,7 @@
 import mongoose, { Schema } from 'mongoose';
 import type { ICompany } from '@oim/shared';
 
-const companySchema = new Schema<ICompany>(
+const companySchema = new Schema<any>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     companyName: { type: String, required: true, trim: true },
@@ -32,4 +32,4 @@ companySchema.index({ userId: 1 });
 companySchema.index({ verificationStatus: 1 });
 companySchema.index({ industry: 1 });
 
-export const Company = mongoose.models.Company || mongoose.model<ICompany>('Company', companySchema);
+export const Company: mongoose.Model<ICompany> = mongoose.models.Company || mongoose.model<ICompany>('Company', companySchema);

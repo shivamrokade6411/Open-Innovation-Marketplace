@@ -44,10 +44,6 @@ userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ innovationScore: -1 });
 
-userSchema.virtual('fullProfile').get(function fullProfile(): string {
-  return `${this.name} - ${this.email}`;
-});
-
 userSchema.pre('save', async function hashPassword(next): Promise<void> {
   try {
     if (!this.isModified('passwordHash')) {
@@ -96,4 +92,4 @@ userSchema.static('findByEmail', async function findByEmail(email: string): Prom
   return this.findOne({ email }).select('+passwordHash').exec();
 });
 
-export const User = mongoose.models.User || mongoose.model<IUser, IUserModel>('User', userSchema);
+export const User = (mongoose.models.User || mongoose.model<IUser, IUserModel>('User', userSchema)) as unknown as IUserModel;
