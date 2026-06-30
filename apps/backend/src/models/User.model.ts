@@ -40,7 +40,6 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
   { timestamps: true }
 );
 
-userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ innovationScore: -1 });
 

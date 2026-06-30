@@ -1,5 +1,6 @@
 /*
- * Purpose: Custom local dev runner bypass to avoid Turbo Windows access violation crashes.
+ * Purpose: Custom local dev runner bypass to avoid Turbo Windows access violation crashes,
+ * and automatically manage local portable database and Redis services.
  * Author: Antigravity Pair Programmer
  * Date: 2026-06-30
  */
@@ -40,15 +41,39 @@ function startProcess(name, command, args) {
   return proc;
 }
 
-const backend = startProcess('Backend', 'pnpm', ['--filter', 'backend', 'dev']);
-const frontend = startProcess('Frontend', 'pnpm', ['--filter', 'frontend', 'dev']);
+// Absolute paths to local database binaries
+const mongoBin = path.join(__dirname, '.local-db', 'mongodb', 'mongodb-win32-x86_64-windows-7.0.6', 'bin', 'mongod.exe');
+const mongoData = path.join(__dirname, '.local-db', 'mongodb-data');
+const redisBin = path.join(__dirname, '.local-db', 'redis', 'redis-server.exe');
+
+// Double quotes for paths with spaces
+const mongoCmd = `"${mongoBin}"`;
+const redisCmd = `"${redisBin}"`;
+
+const mongodb = startProcess('MongoDB', mongoCmd, ['--dbpath', `"${mongoData}"`, '--port', '27017']);
+const redis = startProcess('Redis', redisCmd, ['--port', '6379']);
+
+let backend;
+let frontend;
+
+// Delay starting the frontend and backend slightly to allow MongoDB and Redis to initialize
+setTimeout(() => {
+  backend = startProcess('Backend', 'pnpm', ['--filter', 'backend', 'dev']);
+  frontend = startProcess('Frontend', 'pnpm', ['--filter', 'frontend', 'dev']);
+}, 3000);
 
 const cleanup = () => {
-  console.log('\n[System] Stopping development servers...');
-  backend.kill('SIGINT');
-  frontend.kill('SIGINT');
-  process.exit(0);
+  console.log('\n[System] Stopping all servers and database services...');
+  if (backend) backend.kill('SIGINT');
+  if (frontend) frontend.kill('SIGINT');
+  mongodb.kill('SIGINT');
+  redis.kill('SIGINT');
+  
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
 };
 
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
+

@@ -17,7 +17,6 @@ const conversationSchema = new Schema<any>(
   { timestamps: true }
 );
 
-conversationSchema.index({ participants: 1 });
 conversationSchema.index({ lastActivity: -1 });
 
 const messageSchema = new Schema<any>(
@@ -36,8 +35,6 @@ const messageSchema = new Schema<any>(
 );
 
 messageSchema.index({ conversationId: 1, createdAt: -1 });
-messageSchema.index({ senderId: 1 });
-messageSchema.index({ receiverId: 1 });
 
 export const Conversation: mongoose.Model<IConversation> = mongoose.models.Conversation || mongoose.model<IConversation>('Conversation', conversationSchema);
 export const Message: mongoose.Model<IMessage> = mongoose.models.Message || mongoose.model<IMessage>('Message', messageSchema);

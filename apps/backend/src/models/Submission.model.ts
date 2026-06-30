@@ -39,7 +39,6 @@ const submissionSchema = new Schema<any>(
 );
 
 submissionSchema.index({ challengeId: 1, userId: 1 }, { unique: true });
-submissionSchema.index({ status: 1 });
 submissionSchema.index({ score: -1 });
 
 export const Submission: mongoose.Model<ISubmission> = mongoose.models.Submission || mongoose.model<ISubmission>('Submission', submissionSchema);

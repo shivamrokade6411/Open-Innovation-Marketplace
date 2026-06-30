@@ -28,8 +28,4 @@ const companySchema = new Schema<any>(
   { timestamps: true }
 );
 
-companySchema.index({ userId: 1 });
-companySchema.index({ verificationStatus: 1 });
-companySchema.index({ industry: 1 });
-
 export const Company: mongoose.Model<ICompany> = mongoose.models.Company || mongoose.model<ICompany>('Company', companySchema);

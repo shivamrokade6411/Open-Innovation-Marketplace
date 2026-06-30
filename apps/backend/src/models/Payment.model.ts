@@ -23,6 +23,4 @@ const paymentSchema = new Schema<any>(
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 
-paymentSchema.index({ userId: 1 });
-
 export const Payment: mongoose.Model<IPayment> = mongoose.models.Payment || mongoose.model<IPayment>('Payment', paymentSchema);
