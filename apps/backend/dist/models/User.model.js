@@ -64,9 +64,6 @@ const userSchema = new mongoose_1.Schema({
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ innovationScore: -1 });
-userSchema.virtual('fullProfile').get(function fullProfile() {
-    return `${this.name} - ${this.email}`;
-});
 userSchema.pre('save', async function hashPassword(next) {
     try {
         if (!this.isModified('passwordHash')) {
