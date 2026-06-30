@@ -12,7 +12,7 @@ function startProcess(name, command, args) {
   const proc = spawn(command, args, { 
     cwd: __dirname, 
     shell: true,
-    env: { ...process.env, FORCE_COLOR: 'true' }
+    env: { ...process.env, FORCE_COLOR: 'true', NODE_OPTIONS: '--max-old-space-size=4096' }
   });
 
   proc.stdout.on('data', (data) => {
