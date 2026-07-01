@@ -10,6 +10,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { registerThunk, setCredentials } from '../../../store/authSlice';
@@ -70,6 +71,7 @@ export default function RegisterPage(): JSX.Element {
   const progress = useMemo(() => ((step + 1) / 4) * 100, [step]);
 
   const submitStep = async (): Promise<void> => {
+    setError(null);
     try {
       if (step === 0) {
         stepSchemas[0].parse({ role: values.role });
@@ -101,7 +103,16 @@ export default function RegisterPage(): JSX.Element {
         router.push('/dashboard');
       }
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Registration failed');
+      if (submitError instanceof z.ZodError) {
+        const messages = submitError.errors.map((err) => {
+          const fieldName = err.path.join('.');
+          const formattedField = fieldName ? fieldName.charAt(0).toUpperCase() + fieldName.slice(1) : '';
+          return formattedField ? `${formattedField}: ${err.message}` : err.message;
+        });
+        setError(messages.join('\n'));
+      } else {
+        setError(submitError instanceof Error ? submitError.message : 'Registration failed');
+      }
     }
   };
 
@@ -146,9 +157,30 @@ export default function RegisterPage(): JSX.Element {
             </div>
           )}
           {step === 3 && <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm dark:border-slate-700">We will send a verification email after registration.</div>}
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && (
+            <div className="flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400 dark:border-red-500/30 dark:bg-red-950/20">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div className="text-sm font-medium space-y-1">
+                {error.split('\n').map((err, i) => (
+                  <div key={i}>{err}</div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-3">
-            <Button type="button" variant="secondary" onClick={() => setStep((current) => Math.max(0, current - 1))} disabled={step === 0}>Back</Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                if (step === 0) {
+                  router.push('/login');
+                } else {
+                  setStep((current) => current - 1);
+                }
+              }}
+            >
+              Back
+            </Button>
             <Button type="button" onClick={submitStep}>{step === 3 ? 'Create account' : 'Continue'}</Button>
           </div>
         </motion.div>

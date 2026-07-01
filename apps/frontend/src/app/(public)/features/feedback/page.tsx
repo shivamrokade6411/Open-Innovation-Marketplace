@@ -208,14 +208,4 @@ export default function FeedbackFeaturePage() {
     </main>
   );
 }
-            Expert Mentor Feedback
-          </h1>
-          <p className="mt-4 text-lg text-slate-400">Feature #2 - Threaded feedback system with AI-powered suggestions</p>
-        </div>
-      </div>
-      <Card variant="glass">
-        <p className="text-slate-400">This feature is being built. Check back soon!</p>
-      </Card>
-    </main>
-  );
-}
+

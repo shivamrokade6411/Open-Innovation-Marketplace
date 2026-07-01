@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -50,6 +51,9 @@ export default function LoginPage(): JSX.Element {
     <main className="flex min-h-screen items-center justify-center px-4 py-16">
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <Card variant="glass" className="bg-white/70 dark:bg-slate-950/60">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 mb-4 transition-colors">
+            <ArrowLeft className="h-4 w-4" /> Back to Home
+          </Link>
           <h1 className="text-3xl font-bold">Welcome back</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Sign in to continue building and submitting ideas.</p>
           <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>

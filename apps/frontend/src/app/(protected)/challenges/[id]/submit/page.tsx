@@ -7,12 +7,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '../../../../../components/ui/Button';
 import { Card } from '../../../../../components/ui/Card';
 
 const storageKey = 'oim-submission-draft';
 
 export default function SubmissionPage(): JSX.Element {
+  const router = useRouter();
+  const params = useParams();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState({ title: '', description: '', techStack: '', githubUrl: '', videoUrl: '', solutionUrl: '' });
 
@@ -51,7 +54,18 @@ export default function SubmissionPage(): JSX.Element {
         )}
         {step === 3 && <div className="rounded-2xl bg-brand-primary/10 p-6 text-sm">AI feedback preview is generated from your problem statement and tech stack.</div>}
         <div className="mt-6 flex justify-between gap-3">
-          <Button variant="secondary" onClick={() => setStep((current) => Math.max(0, current - 1))} disabled={step === 0}>Back</Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              if (step === 0) {
+                router.push(`/challenges/${params.id}`);
+              } else {
+                setStep((current) => current - 1);
+              }
+            }}
+          >
+            Back
+          </Button>
           <Button onClick={() => setStep((current) => Math.min(3, current + 1))}>{step === 3 ? 'Submit solution' : 'Continue'}</Button>
         </div>
       </Card>
