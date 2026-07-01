@@ -225,7 +225,7 @@ export function SubmissionsTracker({ challengeId, autoRefresh = true }: TrackerP
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-lg">{status.icon}</span>
                           <h4 className="font-semibold line-clamp-1">{submission.title}</h4>
-                          <Badge variant="outline" size="sm" className={status.color}>
+                          <Badge variant="gray" className={status.color}>
                             {status.label}
                           </Badge>
                         </div>
@@ -329,7 +329,7 @@ function SubmissionDetailModal({ submission, onClose }: SubmissionDetailModalPro
             <span className="text-2xl">{status.icon}</span>
             <Badge className={status.color}>{status.label}</Badge>
             {submission.score !== undefined && (
-              <Badge variant="outline">Score: {submission.score.toFixed(1)}</Badge>
+              <Badge variant="gray">Score: {submission.score.toFixed(1)}</Badge>
             )}
           </div>
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card } from '../../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { Button } from '../../../../components/ui/Button';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 
 export default function FeedbackFeaturePage(): JSX.Element {
