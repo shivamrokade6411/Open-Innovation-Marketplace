@@ -123,24 +123,40 @@ export default function HomePage(): JSX.Element {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {highlights.map((item) => (
-              <Card 
-                key={item.title} 
-                variant="glass" 
-                hover 
-                className="flex flex-col h-full bg-[#121212] border-white/5 hover:border-purple-500/20 text-left transition-all duration-300"
+            {highlights.map((item, index) => (
+              <Link
+                key={item.title}
+                href={
+                  index === 0
+                    ? '/features/tracker'
+                    : index === 1
+                      ? '/features/feedback'
+                      : index === 2
+                        ? '/features/grading'
+                        : '/features/certificates'
+                }
               >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="p-3 rounded-xl bg-white/5 text-purple-400">
-                    <item.icon className="h-6 w-6" />
+                <Card 
+                  key={item.title} 
+                  variant="glass" 
+                  hover 
+                  className="flex flex-col h-full bg-[#121212] border-white/5 hover:border-purple-500/20 text-left transition-all duration-300 cursor-pointer group"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="p-3 rounded-xl bg-white/5 group-hover:bg-purple-600/20 text-purple-400 transition-colors">
+                      <item.icon className="h-6 w-6" />
+                    </div>
+                    <span className="text-2xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-white/5 text-cyan-400 border border-white/5">
+                      {item.tag}
+                    </span>
                   </div>
-                  <span className="text-2xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-white/5 text-cyan-400 border border-white/5">
-                    {item.tag}
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
-                <p className="text-sm text-slate-400 font-light leading-relaxed flex-grow">{item.description}</p>
-              </Card>
+                  <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
+                  <p className="text-sm text-slate-400 font-light leading-relaxed flex-grow">{item.description}</p>
+                  <div className="mt-4 pt-4 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs font-semibold text-purple-400">Learn more →</span>
+                  </div>
+                </Card>
+              </Link>
             ))}
           </div>
         </section>

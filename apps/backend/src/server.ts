@@ -11,6 +11,7 @@ import { connectDatabase } from './config/database';
 import { connectRedis, redisClient } from './config/redis';
 import { registerChatNamespace } from './sockets/chat.socket';
 import { registerNotificationNamespace } from './sockets/notification.socket';
+import { registerSubmissionsNamespace } from './sockets/submissions.socket';
 
 const port = Number(process.env.PORT ?? 5000);
 const server = http.createServer(app);
@@ -20,6 +21,7 @@ const io = new SocketIOServer(server, {
 
 registerChatNamespace(io);
 registerNotificationNamespace(io);
+registerSubmissionsNamespace(io);
 
 async function start(): Promise<void> {
   await connectDatabase();

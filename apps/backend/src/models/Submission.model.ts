@@ -17,6 +17,7 @@ const submissionSchema = new Schema<any>(
     githubUrl: { type: String },
     videoUrl: { type: String },
     pdfUrl: { type: String },
+    sandboxUrl: { type: String },
     files: { type: [String], default: [] },
     techStack: { type: [String], default: [] },
     status: { type: String, enum: ['submitted', 'underReview', 'shortlisted', 'winner', 'rejected'], default: 'submitted', index: true },

@@ -8,12 +8,14 @@ import { Router } from 'express';
 import { authenticateJWT } from '../middleware/auth.middleware';
 import { companyOnly, innovatorOnly } from '../middleware/role.middleware';
 import { uploadMixed } from '../middleware/upload.middleware';
-import { createSubmission, getSubmissionById, updateSubmission, reviewSubmission, shortlistSubmission, selectWinner, getMySubmissions } from '../controllers/submission.controller';
+import { createSubmission, getSubmissionById, updateSubmission, reviewSubmission, shortlistSubmission, selectWinner, getMySubmissions, getSubmissionsByChallenge, getLiveSubmissionStats } from '../controllers/submission.controller';
 
 export const submissionRouter = Router();
 
 submissionRouter.post('/', authenticateJWT, innovatorOnly, uploadMixed(), createSubmission);
 submissionRouter.get('/my', authenticateJWT, innovatorOnly, getMySubmissions);
+submissionRouter.get('/challenge/:challengeId/tracker', getSubmissionsByChallenge);
+submissionRouter.get('/challenge/:challengeId/stats', getLiveSubmissionStats);
 submissionRouter.get('/:id', authenticateJWT, getSubmissionById);
 submissionRouter.put('/:id', authenticateJWT, innovatorOnly, uploadMixed(), updateSubmission);
 submissionRouter.post('/:id/review', authenticateJWT, companyOnly, reviewSubmission);

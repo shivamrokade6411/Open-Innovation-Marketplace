@@ -190,3 +190,91 @@ export async function getMySubmissions(req: Request, res: Response): Promise<voi
   const submissions = await Submission.find({ userId: req.user.userId }).lean();
   res.status(200).json({ success: true, message: 'Submissions loaded', data: submissions });
 }
+
+/**
+ * Get submissions for a challenge (paginated, for tracker).
+ * @param req The incoming request with challengeId, page, limit, and optional status filter.
+ * @param res The outgoing response.
+ * @returns Promise resolving to paginated submissions.
+ */
+export async function getSubmissionsByChallenge(req: Request, res: Response): Promise<void> {
+  const challengeId = req.params.challengeId as string;
+  const page = Math.max(1, Number(req.query.page ?? 1));
+  const limit = Math.min(50, Math.max(1, Number(req.query.limit ?? 10)));
+  const status = (req.query.status as string | undefined)?.split(',').filter(Boolean);
+
+  const query: any = { challengeId };
+  if (status && status.length > 0) {
+    query.status = { $in: status };
+  }
+
+  const skip = (page - 1) * limit;
+  const [submissions, total] = await Promise.all([
+    Submission.find(query)
+      .select('_id title status userId challengeId updatedAt score aiScore sandboxUrl githubUrl')
+      .skip(skip)
+      .limit(limit)
+      .sort({ updatedAt: -1 })
+      .populate('userId', 'name email avatar'),
+    Submission.countDocuments(query)
+  ]);
+
+  res.status(200).json({
+    success: true,
+    message: 'Submissions loaded',
+    data: {
+      submissions,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    }
+  });
+}
+
+/**
+ * Get live submission statistics for a challenge (for dashboard badges).
+ * @param req The incoming request with challengeId.
+ * @param res The outgoing response.
+ * @returns Promise resolving to count breakdown by status.
+ */
+export async function getLiveSubmissionStats(req: Request, res: Response): Promise<void> {
+  const challengeId = req.params.challengeId as string;
+
+  const [
+    totalSubmissions,
+    draftCount,
+    reviewCount,
+    prototypeCount,
+    acceptedCount,
+    rejectedCount
+  ] = await Promise.all([
+    Submission.countDocuments({ challengeId }),
+    Submission.countDocuments({ challengeId, status: 'submitted' }),
+    Submission.countDocuments({ challengeId, status: 'underReview' }),
+    Submission.countDocuments({ challengeId, status: 'shortlisted' }),
+    Submission.countDocuments({ challengeId, status: 'winner' }),
+    Submission.countDocuments({ challengeId, status: 'rejected' })
+  ]);
+
+  res.status(200).json({
+    success: true,
+    message: 'Live stats loaded',
+    data: {
+      challengeId,
+      totalSubmissions,
+      byStatus: {
+        draft: draftCount,
+        inReview: reviewCount,
+        prototypeTest: prototypeCount,
+        accepted: acceptedCount,
+        rejected: rejectedCount
+      },
+      liveCount: draftCount + reviewCount,
+      timestamp: new Date()
+    }
+  });
+}
+
