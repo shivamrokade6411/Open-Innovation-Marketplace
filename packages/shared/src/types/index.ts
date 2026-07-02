@@ -68,6 +68,7 @@ export interface IUser {
   innovationScore: number;
   isVerified: boolean;
   isActive: boolean;
+  verificationToken?: string;
   refreshTokens: string[];
   createdAt: Date;
   updatedAt: Date;

@@ -43,12 +43,21 @@ function stripSensitiveUser(user: { _id: unknown; name: string; email: string; r
 }
 
 async function sendMail(to: string, subject: string, text: string): Promise<void> {
-  await emailTransport.sendMail({
-    from: process.env.SMTP_USER ?? 'no-reply@openinnovationmarketplace.com',
-    to,
-    subject,
-    text
-  });
+  try {
+    await emailTransport.sendMail({
+      from: process.env.SMTP_USER ?? 'no-reply@openinnovationmarketplace.com',
+      to,
+      subject,
+      text
+    });
+    console.log(`[Email] Sent email to ${to} with subject "${subject}"`);
+  } catch (error) {
+    console.error(`[Email Error] Failed to send email to ${to} (Subject: "${subject}"):`, error);
+    if (process.env.NODE_ENV === 'production') {
+      throw error;
+    }
+    console.warn(`[Email Warning] Non-production environment: proceeding despite email failure. Email text:\n${text}`);
+  }
 }
 
 /**
@@ -66,6 +75,9 @@ export async function register(req: Request, res: Response): Promise<void> {
       throw new AppError('Email already in use', 409, 'EMAIL_EXISTS');
     }
 
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenHash = crypto.createHash('sha256').update(verifyToken).digest('hex');
+
     const user = await User.create({
       name: payload.name,
       email: payload.email,
@@ -78,6 +90,7 @@ export async function register(req: Request, res: Response): Promise<void> {
       portfolioUrl: payload.portfolioUrl || undefined,
       isVerified: false,
       isActive: true,
+      verificationToken: verificationTokenHash,
       refreshTokens: []
     });
 
@@ -93,7 +106,6 @@ export async function register(req: Request, res: Response): Promise<void> {
       });
     }
 
-    const verifyToken = crypto.randomBytes(32).toString('hex');
     await sendMail(payload.email, 'Verify your email', `Use this verification token: ${verifyToken}`);
 
     const tokens = createAuthTokens(String(user._id), user.role, user.email);

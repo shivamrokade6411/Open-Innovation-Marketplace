@@ -35,6 +35,7 @@ const userSchema = new Schema<IUser, IUserModel, IUserMethods>(
     innovationScore: { type: Number, default: 0, index: true },
     isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
+    verificationToken: { type: String, select: false },
     refreshTokens: { type: [String], default: [] }
   },
   { timestamps: true }

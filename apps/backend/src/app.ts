@@ -4,6 +4,7 @@
  * Date: 2026-06-28
  */
 
+import 'express-async-errors';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
