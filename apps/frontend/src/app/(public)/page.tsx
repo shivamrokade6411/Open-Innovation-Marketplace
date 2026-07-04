@@ -56,11 +56,14 @@ export default function HomePage(): JSX.Element {
         {/* HERO SECTION */}
         <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 flex flex-col items-center text-center max-w-4xl mx-auto">
           {/* Announcement badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-purple-500/35 transition duration-300 text-xs md:text-sm text-slate-300 mb-8 cursor-pointer shadow-inner backdrop-blur-sm animate-pulse">
-            <span className="h-2 w-2 rounded-full bg-cyan-400" />
+          <Link
+            href="/challenges/1"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-purple-500/35 transition duration-300 text-xs md:text-sm text-slate-300 mb-8 cursor-pointer shadow-inner backdrop-blur-sm hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
             <span>New challenge: <strong className="text-white font-semibold">AI-powered sustainability scoring</strong></span>
             <ArrowRight className="h-3 w-3 text-cyan-400" />
-          </div>
+          </Link>
 
           {/* Large centered headline */}
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
