@@ -21,7 +21,7 @@ const config: Config = {
         success: '#10b981',
         warning: '#f59e0b',
         danger: '#ef4444',
-        'surface-dark': '#0f172a',
+        'surface-dark': '#0a0e1a',
         'surface-card-dark': '#1e293b',
         'surface-light': '#f8fafc',
         'surface-card-light': '#ffffff',
