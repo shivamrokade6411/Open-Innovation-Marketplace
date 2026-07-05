@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Star, MessageSquare, Send, Loader, AlertCircle, CheckCircle } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Card } from '../ui/Card';
+import { Button } from '../ui/Button';
+import { Badge } from '../ui/Badge';
 import io from 'socket.io-client';
 
 interface Feedback {

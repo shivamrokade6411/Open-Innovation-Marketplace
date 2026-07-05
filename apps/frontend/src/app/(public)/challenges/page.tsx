@@ -9,106 +9,9 @@
 import { useState } from 'react';
 import { ChallengeCard } from '../../../components/challenges/ChallengeCard';
 import type { IChallenge } from '@oim/shared';
-import { Search, Filter, RefreshCw, Globe, Award } from 'lucide-react';
-
-const sampleChallenges: IChallenge[] = [
-  {
-    _id: '1',
-    companyId: 'c1',
-    title: 'AI Sustainability Scoring',
-    description: 'Build a system that scores sustainability metrics for consumer products.',
-    problemStatement: 'Help companies quantify environmental impact.',
-    techStack: ['TypeScript', 'OpenAI', 'Next.js'],
-    category: 'ai',
-    difficulty: 'hard',
-    prizes: { first: 25000, second: 10000, third: 5000, total: 40000 },
-    deadline: new Date(Date.now() + 7 * 86400000),
-    startDate: new Date(),
-    status: 'active',
-    tags: ['AI', 'Sustainability'],
-    requirements: ['MVP', 'Documentation'],
-    maxParticipants: 100,
-    currentParticipants: 34,
-    views: 1200,
-    isRemote: true,
-    attachments: [],
-    aiSummary: 'Create a sustainability scoring engine.',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    _id: '2',
-    companyId: 'c2',
-    title: 'Decentralized Identity Wallet',
-    description: 'Create a secure mobile wallet app that stores and shares W3C Verifiable Credentials.',
-    problemStatement: 'Improve user privacy online with digital identity standards.',
-    techStack: ['React Native', 'TypeScript', 'Ethers.js'],
-    category: 'blockchain',
-    difficulty: 'expert',
-    prizes: { first: 35000, second: 1500, third: 1000, total: 60000 },
-    deadline: new Date(Date.now() + 14 * 86400000),
-    startDate: new Date(),
-    status: 'active',
-    tags: ['Identity', 'Mobile', 'Crypto'],
-    requirements: ['Wallet App', 'Smart Contract'],
-    maxParticipants: 150,
-    currentParticipants: 89,
-    views: 2400,
-    isRemote: true,
-    attachments: [],
-    aiSummary: 'Build a decentralized identity wallet.',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    _id: '3',
-    companyId: 'c3',
-    title: 'Collaborative Design System',
-    description: 'Develop a web-based tool for designers to manage design tokens and sync them with React.',
-    problemStatement: 'Bridge the gap between design tools and codebases.',
-    techStack: ['Next.js', 'TailwindCSS', 'Figma API'],
-    category: 'design',
-    difficulty: 'medium',
-    prizes: { first: 8000, second: 4000, third: 3000, total: 15000 },
-    deadline: new Date(Date.now() + 5 * 86400000),
-    startDate: new Date(),
-    status: 'active',
-    tags: ['Design', 'UX', 'Tools'],
-    requirements: ['Figma Plugin', 'React Web App'],
-    maxParticipants: 50,
-    currentParticipants: 12,
-    views: 890,
-    isRemote: false,
-    attachments: [],
-    aiSummary: 'Create a React-syncing design system tool.',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    _id: '4',
-    companyId: 'c4',
-    title: 'Smart Home Energy Monitor',
-    description: 'Construct a lightweight dashboard connecting to IoT power outlets to forecast usage.',
-    problemStatement: 'Reduce residential energy consumption with intelligent predictions.',
-    techStack: ['Vue.js', 'Python', 'Raspberry Pi'],
-    category: 'mobile',
-    difficulty: 'easy',
-    prizes: { first: 3000, second: 1500, third: 500, total: 5000 },
-    deadline: new Date(Date.now() + 30 * 86400000),
-    startDate: new Date(),
-    status: 'active',
-    tags: ['IoT', 'Energy', 'Dashboard'],
-    requirements: ['Predictive API', 'Web Interface'],
-    maxParticipants: 200,
-    currentParticipants: 45,
-    views: 1100,
-    isRemote: true,
-    attachments: [],
-    aiSummary: 'Develop an IoT energy forecasting panel.',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-];
+import { Search, Filter, RefreshCw, Globe, Award, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../../services/api';
 
 export default function ChallengesPage(): JSX.Element {
   const [search, setSearch] = useState('');
@@ -117,13 +20,29 @@ export default function ChallengesPage(): JSX.Element {
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [minPrize, setMinPrize] = useState(0);
 
+  const { data: challenges, isLoading, error } = useQuery<IChallenge[]>({
+    queryKey: ['challenges'],
+    queryFn: async () => {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000';
+      const res = await fetch(`${backendUrl}/api/challenges`);
+      if (!res.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const json = await res.json() as { success: boolean; data: IChallenge[] };
+      return json.data;
+    }
+  });
+
   const categories = [
     { value: 'all', label: 'All Categories' },
     { value: 'ai', label: 'Artificial Intelligence' },
     { value: 'web', label: 'Web Development' },
     { value: 'mobile', label: 'Mobile Apps' },
     { value: 'blockchain', label: 'Blockchain & Crypto' },
-    { value: 'design', label: 'UI/UX Design' }
+    { value: 'cloud', label: 'Cloud Infrastructure' },
+    { value: 'iot', label: 'Internet of Things' },
+    { value: 'design', label: 'UI/UX Design' },
+    { value: 'other', label: 'Other' }
   ];
 
   const difficulties = ['easy', 'medium', 'hard', 'expert'];
@@ -142,7 +61,30 @@ export default function ChallengesPage(): JSX.Element {
     setMinPrize(0);
   };
 
-  const filteredChallenges = sampleChallenges.filter((challenge) => {
+  if (isLoading) {
+    return (
+      <main className="px-4 py-12 md:px-8 lg:px-16 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 text-brand-primary animate-spin" />
+        <p className="mt-4 text-slate-500">Loading challenges...</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="px-4 py-12 md:px-8 lg:px-16 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[50vh]">
+        <p className="text-red-500 font-semibold">Failed to load challenges.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 rounded-xl bg-brand-primary hover:bg-brand-accent text-white px-5 py-2 text-sm font-medium transition"
+        >
+          Retry
+        </button>
+      </main>
+    );
+  }
+
+  const filteredChallenges = (challenges || []).filter((challenge) => {
     const searchMatch =
       challenge.title.toLowerCase().includes(search.toLowerCase()) ||
       challenge.techStack.some((tech) => tech.toLowerCase().includes(search.toLowerCase())) ||

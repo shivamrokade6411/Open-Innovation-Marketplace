@@ -9,39 +9,45 @@ import type { IChallenge } from '@oim/shared';
 import { Button } from '../../../../components/ui/Button';
 import { Card } from '../../../../components/ui/Card';
 
-const challenge: IChallenge = {
-  _id: '1',
-  companyId: 'c1',
-  title: 'AI Sustainability Scoring',
-  description: 'Build a system that scores sustainability metrics for consumer products.',
-  problemStatement: 'Help companies quantify environmental impact.',
-  techStack: ['TypeScript', 'OpenAI', 'Next.js'],
-  category: 'ai',
-  difficulty: 'hard',
-  prizes: { first: 25000, second: 10000, third: 5000, total: 40000 },
-  deadline: new Date(Date.now() + 7 * 86400000),
-  startDate: new Date(),
-  status: 'active',
-  tags: ['AI', 'Sustainability'],
-  requirements: ['MVP', 'Documentation'],
-  maxParticipants: 100,
-  currentParticipants: 34,
-  views: 1200,
-  isRemote: true,
-  attachments: [],
-  aiSummary: 'Create a sustainability scoring engine.',
-  createdAt: new Date(),
-  updatedAt: new Date()
-};
+interface PageProps {
+  params: {
+    id: string;
+  };
+}
 
-export default function ChallengeDetailPage(): JSX.Element {
+export default async function ChallengeDetailPage({ params }: PageProps): Promise<JSX.Element> {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000';
+  
+  let challenge: IChallenge;
+  try {
+    const res = await fetch(`${backendUrl}/api/challenges/${params.id}`, { cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error('Not found');
+    }
+    const json = await res.json() as { success: boolean; data: IChallenge };
+    challenge = json.data;
+  } catch (error) {
+    return (
+      <main className="px-4 py-12 md:px-8 lg:px-16 text-center max-w-xl mx-auto flex flex-col items-center justify-center min-h-[50vh]">
+        <h1 className="text-3xl font-black text-slate-800 dark:text-white">Challenge Not Found</h1>
+        <p className="mt-3 text-slate-600 dark:text-slate-400">The challenge you are looking for does not exist or has been removed.</p>
+        <Button asChild className="mt-6">
+          <Link href="/challenges">Back to Challenges</Link>
+        </Button>
+      </main>
+    );
+  }
+
+  const deadlineDate = new Date(challenge.deadline);
+  const createdDate = new Date(challenge.createdAt);
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CreativeWork',
     name: challenge.title,
     description: challenge.description,
-    dateCreated: challenge.createdAt.toISOString(),
-    deadline: challenge.deadline.toISOString()
+    dateCreated: createdDate.toISOString(),
+    deadline: deadlineDate.toISOString()
   };
 
   return (
@@ -51,9 +57,9 @@ export default function ChallengeDetailPage(): JSX.Element {
         <div className="space-y-6">
           <Card variant="glass">
             <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-              <span className="rounded-full bg-brand-primary/15 px-3 py-1 text-brand-primary">{challenge.category}</span>
-              <span>{challenge.difficulty}</span>
-              <span>Remote</span>
+              <span className="rounded-full bg-brand-primary/15 px-3 py-1 text-brand-primary capitalize">{challenge.category}</span>
+              <span className="capitalize">{challenge.difficulty}</span>
+              <span>{challenge.isRemote ? 'Remote' : 'On-site'}</span>
             </div>
             <h1 className="mt-4 text-4xl font-black">{challenge.title}</h1>
             <p className="mt-4 text-slate-600 dark:text-slate-300">{challenge.description}</p>
