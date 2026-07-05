@@ -44,7 +44,7 @@ const highlights = [
 
 export default function HomePage(): JSX.Element {
   return (
-    <div className="min-h-screen bg-[#0d0d0d] text-white selection:bg-purple-500 selection:text-white overflow-hidden pb-24">
+    <div className="min-h-screen bg-[#0a0a0f] text-white selection:bg-purple-500 selection:text-white overflow-hidden pb-24">
       {/* Decorative Gradients */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] pointer-events-none opacity-40">
         <div className="absolute top-[-10%] left-[20%] w-[350px] h-[350px] rounded-full bg-purple-600/30 blur-[120px]" />
@@ -66,9 +66,9 @@ export default function HomePage(): JSX.Element {
           </Link>
 
           {/* Large centered headline */}
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-white">
             Where Innovation <br />
-            <span className="bg-gradient-to-r from-purple-400 via-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-purple-500 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Meets Opportunity
             </span>
           </h1>

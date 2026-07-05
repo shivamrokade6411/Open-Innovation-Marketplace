@@ -27,7 +27,7 @@ export function ThemeToggle(): JSX.Element | null {
       whileTap={{ scale: 0.95 }}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       aria-label="Toggle theme"
-      className="relative h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-surface-card-dark text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+      className="relative h-10 w-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-indigo-950/80 text-slate-700 dark:text-white border border-slate-200 dark:border-indigo-500/35 hover:bg-slate-200 dark:hover:bg-indigo-900/60 transition-colors"
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
@@ -39,7 +39,7 @@ export function ThemeToggle(): JSX.Element | null {
           className="absolute"
         >
           {isDark ? (
-            <Moon className="h-5 w-5 text-indigo-400 fill-indigo-400/20" />
+            <Moon className="h-5 w-5 text-white fill-white/10" />
           ) : (
             <Sun className="h-5 w-5 text-amber-500 fill-amber-500/20" />
           )}
