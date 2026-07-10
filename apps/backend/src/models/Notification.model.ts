@@ -9,7 +9,7 @@ import type { INotification } from '@oim/shared';
 
 const notificationSchema = new Schema<INotification>(
   {
-    userId: { type: Schema.Types.ObjectId as any, ref: 'User', required: true, index: true },
+    userId: { type: Schema.Types.ObjectId as any, ref: 'User', required: true },
     type: { type: String, enum: ['challenge', 'submission', 'message', 'payment', 'system', 'achievement'], required: true },
     title: { type: String, required: true },
     body: { type: String, required: true },

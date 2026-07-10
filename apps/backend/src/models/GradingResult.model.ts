@@ -8,7 +8,7 @@ import mongoose, { Schema } from 'mongoose';
 
 const gradingResultSchema = new Schema<any>(
   {
-    submissionId: { type: Schema.Types.ObjectId, ref: 'Submission', required: true, unique: true, index: true },
+    submissionId: { type: Schema.Types.ObjectId, ref: 'Submission', required: true, unique: true },
     codeQualityScore: { type: Number, min: 0, max: 100, required: true },
     uniquenessScore: { type: Number, min: 0, max: 100, required: true },
     securityScore: { type: Number, min: 0, max: 100, required: true },
@@ -25,7 +25,6 @@ const gradingResultSchema = new Schema<any>(
   { timestamps: true }
 );
 
-gradingResultSchema.index({ submissionId: 1 });
 gradingResultSchema.index({ overallScore: -1 });
 gradingResultSchema.index({ createdAt: -1 });
 

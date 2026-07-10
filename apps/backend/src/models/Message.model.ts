@@ -21,7 +21,7 @@ conversationSchema.index({ lastActivity: -1 });
 
 const messageSchema = new Schema<any>(
   {
-    conversationId: { type: Schema.Types.ObjectId, ref: 'Conversation', required: true, index: true },
+    conversationId: { type: Schema.Types.ObjectId, ref: 'Conversation', required: true },
     senderId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     receiverId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     content: { type: String, required: true },

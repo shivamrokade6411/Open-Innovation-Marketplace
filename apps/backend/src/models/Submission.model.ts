@@ -9,7 +9,7 @@ import type { ISubmission } from '@oim/shared';
 
 const submissionSchema = new Schema<any>(
   {
-    challengeId: { type: Schema.Types.ObjectId, ref: 'Challenge', required: true, index: true },
+    challengeId: { type: Schema.Types.ObjectId, ref: 'Challenge', required: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true },

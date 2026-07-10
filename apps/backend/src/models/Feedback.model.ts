@@ -9,7 +9,7 @@ import mongoose, { Schema } from 'mongoose';
 const feedbackSchema = new Schema<any>(
   {
     submissionId: { type: Schema.Types.ObjectId, ref: 'Submission', required: true, index: true },
-    mentorId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    mentorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     strengths: { type: [String], default: [] },
     improvements: { type: [String], default: [] },
     nextSteps: { type: [String], default: [] },
