@@ -51,7 +51,30 @@ const MOCK_COMPANIES: Company[] = [
   }
 ];
 
-export default function CompaniesPage(): JSX.Element {
+export default async function CompaniesPage(): Promise<JSX.Element> {
+  let companies: Company[] = [];
+  try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000';
+    const res = await fetch(`${backendUrl}/api/companies`, { next: { revalidate: 60 } });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        companies = json.data.map((c: any) => ({
+          id: String(c._id),
+          name: c.companyName,
+          logoUrl: c.logo,
+          description: c.description || '',
+          tags: [c.industry].filter(Boolean),
+          slug: c.slug || ''
+        }));
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch companies:', err);
+  }
+
+  const displayCompanies = companies.length > 0 ? companies : MOCK_COMPANIES;
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:px-8">
       <div className="mx-auto max-w-5xl">
@@ -62,7 +85,7 @@ export default function CompaniesPage(): JSX.Element {
           Partner with leading industry organizations, corporate sponsors, and high-growth startups launching innovation challenges.
         </p>
         <div className="mt-12">
-          <CompanyGrid initialCompanies={MOCK_COMPANIES} />
+          <CompanyGrid initialCompanies={displayCompanies} />
         </div>
       </div>
     </div>

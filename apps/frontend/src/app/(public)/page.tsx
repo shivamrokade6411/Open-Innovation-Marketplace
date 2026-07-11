@@ -42,7 +42,42 @@ const highlights = [
   }
 ];
 
-export default function HomePage(): JSX.Element {
+export default async function HomePage(): Promise<JSX.Element> {
+  let latestChallengeId = '';
+  let dynamicStats = { totalUsers: 0, totalCompanies: 0, totalChallenges: 0, totalSubmissions: 0 };
+  
+  try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000';
+    
+    // Fetch stats
+    const statsRes = await fetch(`${backendUrl}/api/platform-stats`, { next: { revalidate: 60 } });
+    if (statsRes.ok) {
+      const statsJson = await statsRes.json();
+      if (statsJson.success && statsJson.data) {
+        dynamicStats = statsJson.data;
+      }
+    }
+
+    // Fetch challenges to get the latest one
+    const challengesRes = await fetch(`${backendUrl}/api/challenges`, { next: { revalidate: 60 } });
+    if (challengesRes.ok) {
+      const challengesJson = await challengesRes.json();
+      if (challengesJson.success && Array.isArray(challengesJson.data) && challengesJson.data.length > 0) {
+        const firstChallenge = challengesJson.data[0];
+        latestChallengeId = firstChallenge._id;
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load homepage dynamic data:', err);
+  }
+
+  const stats = [
+    { label: 'Active Innovators', value: dynamicStats.totalUsers > 0 ? `${dynamicStats.totalUsers}+` : '48K+', icon: Users, color: 'text-indigo-400' },
+    { label: 'Global Challenges', value: dynamicStats.totalChallenges > 0 ? `${dynamicStats.totalChallenges}+` : '1.2K+', icon: Trophy, color: 'text-amber-400' },
+    { label: 'Prizes Awarded', value: '$4.8M', icon: Sparkles, color: 'text-cyan-400' },
+    { label: 'Enterprise Partners', value: dynamicStats.totalCompanies > 0 ? `${dynamicStats.totalCompanies}+` : '860+', icon: Briefcase, color: 'text-purple-400' }
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white selection:bg-purple-500 selection:text-white overflow-hidden pb-24">
       {/* Decorative Gradients */}
@@ -57,7 +92,7 @@ export default function HomePage(): JSX.Element {
         <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 flex flex-col items-center text-center max-w-4xl mx-auto">
           {/* Announcement badge */}
           <Link
-            href="/challenges/1"
+            href={latestChallengeId ? `/challenges/${latestChallengeId}` : '/challenges'}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-purple-500/35 transition duration-300 text-xs md:text-sm text-slate-300 mb-8 cursor-pointer shadow-inner backdrop-blur-sm hover:scale-[1.02] active:scale-[0.98]"
           >
             <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
