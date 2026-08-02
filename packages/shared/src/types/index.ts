@@ -78,6 +78,7 @@ export interface ICompany {
   _id: string;
   userId: string;
   companyName: string;
+  slug?: string;
   logo?: string;
   description?: string;
   industry?: string;

@@ -11,6 +11,7 @@ const companySchema = new Schema<any>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     companyName: { type: String, required: true, trim: true },
+    slug: { type: String, unique: true, sparse: true, trim: true, index: true },
     logo: { type: String },
     description: { type: String },
     industry: { type: String, index: true },

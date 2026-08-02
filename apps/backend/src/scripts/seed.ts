@@ -25,9 +25,12 @@ const companiesData = [
     passwordHash: 'Company@123',
     role: 'company' as const,
     companyName: 'TechCorp Solutions',
+    slug: 'techcorp-solutions',
+    description: 'Empowering enterprise digital transformation through scalable AI agent networks and robust cloud integrations.',
     industry: 'Enterprise Software',
     size: 'enterprise' as const,
-    location: 'San Francisco, CA'
+    location: 'San Francisco, CA',
+    website: 'https://techcorp.solutions'
   },
   {
     name: 'EcoSphere Tech',
@@ -35,9 +38,90 @@ const companiesData = [
     passwordHash: 'Company@123',
     role: 'company' as const,
     companyName: 'EcoSphere Tech',
+    slug: 'ecosphere-tech',
+    description: 'Pioneering the future of clean, sustainable energy tracking systems, carbon capture platforms, and IoT micro-grid optimizations.',
     industry: 'Cleantech',
     size: 'medium' as const,
-    location: 'Berlin, Germany'
+    location: 'Berlin, Germany',
+    website: 'https://ecosphere.dev'
+  },
+  {
+    name: 'BioSynthetix Labs',
+    email: 'research@biosynthetix.com',
+    passwordHash: 'Company@123',
+    role: 'company' as const,
+    companyName: 'BioSynthetix Labs',
+    slug: 'biosynthetix-labs',
+    description: 'Accelerating computational drug discovery, gene therapy sequencing, and synthetic biology pipelines through advanced machine learning models.',
+    industry: 'Biotechnology',
+    size: 'startup' as const,
+    location: 'Boston, MA',
+    website: 'https://biosynthetix.io'
+  },
+  {
+    name: 'Apex Autonomous',
+    email: 'drives@apex.auto',
+    passwordHash: 'Company@123',
+    role: 'company' as const,
+    companyName: 'Apex Autonomous',
+    slug: 'apex-autonomous',
+    description: 'Building next-generation simulation modeling environments, high-precision telemetry software, and sensor fusion engines for autonomous vehicle fleets.',
+    industry: 'Automotive & Robotics',
+    size: 'large' as const,
+    location: 'Detroit, MI',
+    website: 'https://apex.auto'
+  },
+  {
+    name: 'Quantum Leap Corp',
+    email: 'info@quantumleap.ca',
+    passwordHash: 'Company@123',
+    role: 'company' as const,
+    companyName: 'Quantum Leap Corp',
+    slug: 'quantum-leap',
+    description: 'Providing secure quantum computing cloud access, high-level developer software kits, and post-quantum encryption protocols for financial systems.',
+    industry: 'Quantum Computing',
+    size: 'startup' as const,
+    location: 'Vancouver, Canada',
+    website: 'https://quantumleap.ca'
+  },
+  {
+    name: 'CyberShield Security',
+    email: 'ops@cybershield.net',
+    passwordHash: 'Company@123',
+    role: 'company' as const,
+    companyName: 'CyberShield Security',
+    slug: 'cybershield-security',
+    description: 'Protecting global enterprise digital infrastructure through automated threat emulation, API penetration testing, and zero-trust authentication networks.',
+    industry: 'Cybersecurity',
+    size: 'enterprise' as const,
+    location: 'Washington, D.C.',
+    website: 'https://cybershield.net'
+  },
+  {
+    name: 'Nova Space Systems',
+    email: 'launch@novaspace.co',
+    passwordHash: 'Company@123',
+    role: 'company' as const,
+    companyName: 'Nova Space Systems',
+    slug: 'nova-space-systems',
+    description: 'Pioneering modular orbital delivery systems, low-earth orbit telecommunication satellite arrays, and robotic docking controls.',
+    industry: 'Aerospace',
+    size: 'medium' as const,
+    location: 'Austin, TX',
+    website: 'https://novaspace.co'
+  },
+  {
+    name: 'Fintech Flow',
+    email: 'billing@fintechflow.uk',
+    passwordHash: 'Company@123',
+    role: 'company' as const,
+    companyName: 'Fintech Flow',
+    slug: 'fintech-flow',
+    description: 'Empowering next-gen payment gateways, localized banking API middleware, decentralized ledger accounting, and real-time fraud prevention systems.',
+    industry: 'FinTech',
+    size: 'large' as const,
+    location: 'London, UK',
+    website: 'https://fintechflow.uk'
   }
 ];
 
@@ -90,14 +174,21 @@ async function seed() {
       const companyProfile = await Company.create({
         userId: user._id.toString(),
         companyName: c.companyName,
+        slug: c.slug,
+        description: c.description,
         industry: c.industry,
         size: c.size,
         location: c.location,
+        website: c.website,
         verificationStatus: 'verified',
         totalChallenges: 0,
         totalHires: 0,
         rating: 4.8,
-        socialLinks: {}
+        socialLinks: {
+          twitter: `https://twitter.com/${c.slug}`,
+          linkedin: `https://linkedin.com/company/${c.slug}`,
+          github: `https://github.com/${c.slug}`
+        }
       });
       seededCompanies.push(companyProfile);
     }
