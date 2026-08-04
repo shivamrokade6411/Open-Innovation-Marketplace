@@ -7,16 +7,8 @@
 import type { NextFunction, Request, Response } from 'express';
 import { AppError } from './errorHandler.middleware';
 
-const requestBuckets = new Map<string, { count: number; resetAt: number }>();
-
-/**
- * Rate limit requests by IP address.
- * @param limit Maximum requests within the window.
- * @param windowMs Window size in milliseconds.
- * @returns Express middleware that enforces the configured limit.
- * @throws AppError when the rate limit is exceeded.
- */
 export function createRateLimiter(limit: number, windowMs: number) {
+  const requestBuckets = new Map<string, { count: number; resetAt: number }>();
   return (req: Request, res: Response, next: NextFunction): void => {
     const key = req.ip ?? req.socket.remoteAddress ?? 'unknown';
     const now = Date.now();

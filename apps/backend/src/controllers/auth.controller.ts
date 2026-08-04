@@ -113,7 +113,15 @@ export async function register(req: Request, res: Response): Promise<void> {
     user.refreshTokens.push(refreshTokenHash);
     await user.save();
 
-    res.status(201).json({ success: true, message: 'Registration successful', data: { tokens, user: stripSensitiveUser(user.toObject()) } });
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful',
+      data: {
+        tokens,
+        user: stripSensitiveUser(user.toObject()),
+        verifyToken: process.env.NODE_ENV !== 'production' ? verifyToken : undefined
+      }
+    });
   } catch (error: unknown) {
     if (error instanceof Error && error.name === 'ZodError') {
       throw validationError(error.message);
