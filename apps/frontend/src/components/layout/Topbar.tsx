@@ -2,7 +2,7 @@
 
 import { Search, Bell, LogOut, User, Settings, Menu } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { RootState } from '../../store';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { Avatar } from '../ui/Avatar';
@@ -14,6 +14,8 @@ import {
   DropdownLabel,
   DropdownSeparator
 } from '../ui/Dropdown';
+import { useAppDispatch } from '../../lib/useAppDispatch';
+import { logoutThunk, clearAuth } from '../../store/authSlice';
 
 export interface TopbarProps {
   onOpenMobileDrawer: () => void;
@@ -22,6 +24,9 @@ export interface TopbarProps {
 
 export function Topbar({ onOpenMobileDrawer, onOpenNotificationsPanel }: TopbarProps): JSX.Element {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const refreshToken = useSelector((state: RootState) => state.auth.refreshToken);
   
   const user = useSelector((state: RootState) => state.auth.user) || {
     name: 'Shivam Rokade',
@@ -32,6 +37,20 @@ export function Topbar({ onOpenMobileDrawer, onOpenNotificationsPanel }: TopbarP
 
   const notifications = useSelector((state: RootState) => state.dashboard.notifications);
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleLogout = async () => {
+    try {
+      if (refreshToken) {
+        await dispatch(logoutThunk(refreshToken));
+      }
+      dispatch(clearAuth());
+      router.push('/login');
+    } catch (err) {
+      console.error('Logout failed:', err);
+      dispatch(clearAuth());
+      router.push('/login');
+    }
+  };
 
   const getBreadcrumbs = () => {
     const parts = pathname.split('/').filter(Boolean);
@@ -114,16 +133,16 @@ export function Topbar({ onOpenMobileDrawer, onOpenNotificationsPanel }: TopbarP
               </div>
             </DropdownLabel>
             <DropdownSeparator />
-            <DropdownItem>
+            <DropdownItem onClick={() => router.push('/dashboard/profile')}>
               <User className="h-4 w-4 text-slate-450" />
               <span>My Profile</span>
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem onClick={() => router.push('/dashboard/settings')}>
               <Settings className="h-4 w-4 text-slate-450" />
               <span>Settings</span>
             </DropdownItem>
             <DropdownSeparator />
-            <DropdownItem className="text-danger focus:bg-danger/10 focus:text-danger font-bold">
+            <DropdownItem onClick={handleLogout} className="text-danger focus:bg-danger/10 focus:text-danger font-bold">
               <LogOut className="h-4 w-4" />
               <span>Logout</span>
             </DropdownItem>
