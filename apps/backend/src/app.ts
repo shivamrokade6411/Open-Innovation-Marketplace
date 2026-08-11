@@ -20,7 +20,7 @@ import feedbackRouter from './routes/feedback.routes';
 import gradingRouter from './routes/grading.routes';
 import certificateRouter from './routes/certificate.routes';
 import { companyRouter } from './routes/company.routes';
-import { getPlatformStats } from './controllers/analytics.controller';
+import { getPlatformStats, getLeaderboard } from './controllers/analytics.controller';
 
 export const app = express();
 
@@ -38,6 +38,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.get('/api/platform-stats', getPlatformStats);
+app.get('/api/leaderboard', getLeaderboard);
  
 app.use('/api/auth', authRouter);
 app.use('/api/challenges', challengeRouter);

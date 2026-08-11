@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { User } from '../models/User.model';
 import { Company } from '../models/Company.model';
+import { Submission } from '../models/Submission.model';
 import { emailTransport } from '../config/email';
 import { AppError, unauthorized, validationError } from '../middleware/errorHandler.middleware';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.utils';
@@ -327,5 +328,37 @@ export async function getMe(req: Request, res: Response): Promise<void> {
     res.status(200).json({ success: true, message: 'Profile loaded', data: stripSensitiveUser(user) });
   } catch (error: unknown) {
     throw error instanceof Error ? error : new AppError('Failed to load profile', 500, 'PROFILE_FAILED');
+  }
+}
+
+/**
+ * Return a public user profile by id along with their portfolios/wins.
+ * @param req The incoming request.
+ * @param res The outgoing response.
+ * @returns Promise resolving to the JSON response.
+ */
+export async function getUserProfileById(req: Request, res: Response): Promise<void> {
+  try {
+    const user = await User.findById(req.params.id).lean();
+    if (!user) {
+      throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+    }
+    const submissions = await Submission.find({ userId: user._id, status: 'winner' }).populate('challengeId').lean();
+    res.status(200).json({
+      success: true,
+      message: 'User profile loaded',
+      data: {
+        user: stripSensitiveUser(user),
+        wins: submissions.map((s: any) => ({
+          id: String(s._id),
+          title: s.title,
+          challenge: s.challengeId,
+          score: s.score,
+          createdAt: s.createdAt
+        }))
+      }
+    });
+  } catch (error: unknown) {
+    throw error instanceof Error ? error : new AppError('Failed to load user profile', 500, 'USER_PROFILE_FAILED');
   }
 }

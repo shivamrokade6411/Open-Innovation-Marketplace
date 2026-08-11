@@ -7,7 +7,7 @@
 import { Router } from 'express';
 import { authenticateJWT } from '../middleware/auth.middleware';
 import { authRateLimiter } from '../middleware/rateLimiter.middleware';
-import { register, login, logout, refreshToken, forgotPassword, resetPassword, verifyEmail, getMe } from '../controllers/auth.controller';
+import { register, login, logout, refreshToken, forgotPassword, resetPassword, verifyEmail, getMe, getUserProfileById } from '../controllers/auth.controller';
 
 export const authRouter = Router();
 
@@ -19,3 +19,4 @@ authRouter.post('/forgot-password', authRateLimiter, forgotPassword);
 authRouter.post('/reset-password', authRateLimiter, resetPassword);
 authRouter.get('/verify-email/:token', verifyEmail);
 authRouter.get('/me', authenticateJWT, getMe);
+authRouter.get('/users/:id', getUserProfileById);

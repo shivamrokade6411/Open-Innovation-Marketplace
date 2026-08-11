@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const protectedPrefixes = ['/dashboard', '/company', '/admin', '/messages', '/notifications', '/certificates', '/settings', '/profile'];
+const protectedPrefixes = ['/dashboard', '/company', '/admin', '/messages', '/notifications', '/certificates', '/settings'];
 
 function isProtectedPath(pathname: string): boolean {
   return protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
@@ -44,5 +44,5 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/company/:path*', '/admin/:path*', '/messages/:path*', '/notifications/:path*', '/certificates/:path*', '/settings/:path*', '/profile/:path*', '/login', '/register']
+  matcher: ['/dashboard/:path*', '/company/:path*', '/admin/:path*', '/messages/:path*', '/notifications/:path*', '/certificates/:path*', '/settings/:path*', '/login', '/register']
 };
