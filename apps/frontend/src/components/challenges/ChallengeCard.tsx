@@ -49,6 +49,18 @@ export function ChallengeCard({ challenge }: ChallengeCardProps): JSX.Element {
     }
   };
 
+  const company = typeof challenge.companyId === 'object' && challenge.companyId !== null
+    ? (challenge.companyId as any)
+    : null;
+  const companyLogo = company?.logo;
+  const companyName = company?.companyName || 'Sponsor';
+  const companyInitials = companyName
+    .split(' ')
+    .map((word: string) => word[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <motion.div variants={cardHover} initial="rest" whileHover="hover" animate="rest" className="h-full">
       <Card
@@ -59,9 +71,22 @@ export function ChallengeCard({ challenge }: ChallengeCardProps): JSX.Element {
         <div className="space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <span className="inline-flex rounded-full bg-brand-primary/15 px-3 py-1 text-xs font-semibold text-brand-primary capitalize">
-                {challenge.category}
-              </span>
+              <div className="flex items-center gap-3">
+                {/* Company Logo / Initials */}
+                <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center bg-gradient-to-br from-purple-600/30 to-cyan-500/30 border border-white/15 text-[11px] font-black text-white shrink-0">
+                  {companyLogo ? (
+                    <img src={companyLogo} alt={companyName} className="h-full w-full object-cover" />
+                  ) : (
+                    <span>{companyInitials}</span>
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 font-semibold leading-none">{companyName}</span>
+                  <span className="inline-flex mt-1 rounded-full bg-brand-primary/15 px-2 py-0.5 text-[10px] font-semibold text-brand-primary capitalize w-fit">
+                    {challenge.category}
+                  </span>
+                </div>
+              </div>
               <h3 className="mt-3 text-xl font-semibold line-clamp-2 min-h-[3.5rem] flex items-center text-slate-900 dark:text-white">
                 {challenge.title}
               </h3>
@@ -81,6 +106,8 @@ export function ChallengeCard({ challenge }: ChallengeCardProps): JSX.Element {
             </span>
             <span>•</span>
             <span>Deadline {deadline}</span>
+            <span>•</span>
+            <span>{challenge.submissionsCount ?? 0} submissions</span>
             <span>•</span>
             <span>
               {challenge.currentParticipants}/{challenge.maxParticipants || '∞'} participants
@@ -115,3 +142,4 @@ export function ChallengeCard({ challenge }: ChallengeCardProps): JSX.Element {
     </motion.div>
   );
 }
+

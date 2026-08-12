@@ -300,6 +300,7 @@ async function seed() {
         reviewNotes: i === 0 ? 'Outstanding work!' : undefined,
         rank: i === 0 ? 1 : i === 1 ? 2 : undefined
       });
+      await Challenge.findByIdAndUpdate(challenge._id, { $inc: { submissionsCount: 1 } });
     }
 
     console.log('Database seeded successfully!');

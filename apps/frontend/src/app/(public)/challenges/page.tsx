@@ -45,6 +45,8 @@ export default function ChallengesPage(): JSX.Element {
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [minPrize, setMinPrize] = useState(0);
   const [sortBy, setSortBy] = useState('newest');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedDeadline, setSelectedDeadline] = useState<string>('all');
 
   // Interactive UI States
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
@@ -67,18 +69,47 @@ export default function ChallengesPage(): JSX.Element {
       setIsFiltering(false);
     }, 300);
     return () => clearTimeout(handler);
-  }, [debouncedSearch, selectedCategory, selectedDifficulties, remoteOnly, minPrize, sortBy]);
+  }, [debouncedSearch, selectedCategory, selectedDifficulties, remoteOnly, minPrize, sortBy, selectedStatus, selectedDeadline]);
 
-  const { data: challenges, isLoading, error } = useQuery<IChallenge[]>({
-    queryKey: ['challenges'],
+  const { data: responseData, isLoading, error } = useQuery<{ success: boolean; data: IChallenge[]; meta: { page: number; limit: number; total: number; hasMore: boolean } }>({
+    queryKey: ['challenges', { debouncedSearch, selectedCategory, selectedDifficulties, remoteOnly, minPrize, sortBy, currentPage, selectedStatus, selectedDeadline }],
     queryFn: async () => {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000';
-      const res = await fetch(`${backendUrl}/api/challenges`);
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.append('search', debouncedSearch);
+      if (selectedCategory && selectedCategory !== 'all') params.append('category', selectedCategory);
+      if (selectedDifficulties.length > 0) params.append('difficulty', selectedDifficulties.join(','));
+      if (remoteOnly) params.append('remoteOnly', 'true');
+      if (minPrize > 0) params.append('prizeMin', minPrize.toString());
+      if (currentPage) params.append('page', currentPage.toString());
+      params.append('limit', '6'); // Page size = 6
+
+      if (sortBy) {
+        let backendSort = 'newest';
+        if (sortBy === 'prize-desc') backendSort = 'prize';
+        if (sortBy === 'deadline-asc') backendSort = 'deadline';
+        if (sortBy === 'popularity') backendSort = 'popularity';
+        params.append('sortBy', backendSort);
+      }
+
+      if (selectedStatus && selectedStatus !== 'all') {
+        let backendStatus = 'active'; // open
+        if (selectedStatus === 'judging') backendStatus = 'review';
+        if (selectedStatus === 'closed') backendStatus = 'completed';
+        params.append('status', backendStatus);
+      }
+
+      if (selectedDeadline && selectedDeadline !== 'all') {
+        const d = new Date();
+        d.setDate(d.getDate() + (selectedDeadline === '7days' ? 7 : 30));
+        params.append('deadlineBefore', d.toISOString());
+      }
+
+      const res = await fetch(`${backendUrl}/api/challenges?${params.toString()}`);
       if (!res.ok) {
         throw new Error('Network response was not ok');
       }
-      const json = await res.json() as { success: boolean; data: IChallenge[] };
-      return json.data;
+      return res.json();
     }
   });
 
@@ -115,6 +146,8 @@ export default function ChallengesPage(): JSX.Element {
     setRemoteOnly(false);
     setMinPrize(0);
     setSortBy('newest');
+    setSelectedStatus('all');
+    setSelectedDeadline('all');
     setCurrentPage(1);
   };
 
@@ -141,49 +174,15 @@ export default function ChallengesPage(): JSX.Element {
     );
   }
 
-  const filteredChallenges = (challenges || []).filter((challenge) => {
-    const searchMatch =
-      challenge.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      challenge.techStack.some((tech) => tech.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
-      challenge.tags.some((tag) => tag.toLowerCase().includes(debouncedSearch.toLowerCase()));
-
-    const categoryMatch = selectedCategory === 'all' || challenge.category === selectedCategory;
-
-    const difficultyMatch =
-      selectedDifficulties.length === 0 || selectedDifficulties.includes(challenge.difficulty);
-
-    const remoteMatch = !remoteOnly || challenge.isRemote;
-
-    const prizeMatch = (challenge.prizes.total ?? 0) >= minPrize;
-
-    return searchMatch && categoryMatch && difficultyMatch && remoteMatch && prizeMatch;
-  });
-
-  const sortedChallenges = [...filteredChallenges].sort((a, b) => {
-    if (sortBy === 'newest') {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    }
-    if (sortBy === 'prize-desc') {
-      return (b.prizes.total ?? 0) - (a.prizes.total ?? 0);
-    }
-    if (sortBy === 'deadline-asc') {
-      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-    }
-    if (sortBy === 'popularity') {
-      return (b.views ?? 0) - (a.views ?? 0);
-    }
-    return 0;
-  });
-
-  // Pagination bounds
-  const itemsPerPage = 6;
-  const totalPages = Math.ceil(sortedChallenges.length / itemsPerPage);
-  const paginatedChallenges = sortedChallenges.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const challengesList = responseData?.data || [];
+  const meta = responseData?.meta;
+  const totalItems = meta?.total || 0;
+  const totalPages = Math.ceil(totalItems / 6);
 
   return (
     <main className="px-4 py-12 md:px-8 lg:px-16 max-w-7xl mx-auto">
       <div className="mb-8 flex flex-col gap-2">
-        <h1 className="text-4xl font-black bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
+        <h1 className="text-4xl font-black bg-gradient-to-r from-brand-primary via-purple-400 to-brand-accent bg-clip-text text-transparent">
           Challenges
         </h1>
         <p className="text-slate-500 dark:text-slate-400">
@@ -265,6 +264,41 @@ export default function ChallengesPage(): JSX.Element {
                   {cat.label}
                 </option>
               ))}
+            </select>
+          </div>
+
+          {/* Status Dropdown */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Status</label>
+            <select
+              value={selectedStatus}
+              onChange={(e) => {
+                setSelectedStatus(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm outline-none transition dark:border-slate-800 dark:bg-slate-900 focus:border-brand-primary text-slate-800 dark:text-white"
+            >
+              <option value="all">All Statuses</option>
+              <option value="open">Open</option>
+              <option value="judging">Judging</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+
+          {/* Deadline Dropdown */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Deadline</label>
+            <select
+              value={selectedDeadline}
+              onChange={(e) => {
+                setSelectedDeadline(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm outline-none transition dark:border-slate-800 dark:bg-slate-900 focus:border-brand-primary text-slate-800 dark:text-white"
+            >
+              <option value="all">Any Deadline</option>
+              <option value="7days">Ending in 7 days</option>
+              <option value="30days">Ending in 30 days</option>
             </select>
           </div>
 
@@ -351,7 +385,7 @@ export default function ChallengesPage(): JSX.Element {
         <section className="space-y-6">
           <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
             <div>
-              Showing {paginatedChallenges.length} of {sortedChallenges.length} results
+              Showing {challengesList.length} of {totalItems} results
             </div>
           </div>
 
@@ -361,10 +395,10 @@ export default function ChallengesPage(): JSX.Element {
                 <SkeletonCard key={index} />
               ))}
             </div>
-          ) : paginatedChallenges.length > 0 ? (
+          ) : challengesList.length > 0 ? (
             <>
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                {paginatedChallenges.map((challenge) => (
+                {challengesList.map((challenge) => (
                   <ChallengeCard key={challenge._id} challenge={challenge} />
                 ))}
               </div>
@@ -412,3 +446,5 @@ export default function ChallengesPage(): JSX.Element {
     </main>
   );
 }
+
+

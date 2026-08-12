@@ -78,6 +78,7 @@ export async function createSubmission(req: Request, res: Response): Promise<voi
     });
 
     await aiProcessingQueue.add('analyze_submission', { submissionId: String(submission._id) });
+    await Challenge.findByIdAndUpdate(payload.challengeId, { $inc: { submissionsCount: 1 } });
     await createNotification(String(challenge.companyId), 'submission', { title: 'New submission', body: `${payload.title} has been submitted.` });
     res.status(201).json({ success: true, message: 'Submission created', data: submission.toObject() });
   } catch (error: unknown) {

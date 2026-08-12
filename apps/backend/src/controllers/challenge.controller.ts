@@ -17,7 +17,7 @@ import { challengeSchema } from '../validators/challenge.validator';
 
 const challengeQuerySchema = z.object({
   category: z.string().optional(),
-  difficulty: z.enum(['easy', 'medium', 'hard', 'expert']).optional(),
+  difficulty: z.string().optional(),
   status: z.enum(['draft', 'active', 'review', 'completed', 'cancelled']).optional(),
   prizeMin: z.coerce.number().optional(),
   prizeMax: z.coerce.number().optional(),
@@ -33,11 +33,20 @@ const challengeQuerySchema = z.object({
 function buildChallengeFilter(query: z.infer<typeof challengeQuerySchema>): Record<string, unknown> {
   const filter: Record<string, unknown> = {};
   if (query.category) filter.category = query.category;
-  if (query.difficulty) filter.difficulty = query.difficulty;
+  if (query.difficulty) {
+    const diffs = query.difficulty.split(',').map((entry) => entry.trim());
+    filter.difficulty = { $in: diffs };
+  }
   if (query.status) filter.status = query.status;
   if (query.deadlineBefore) filter.deadline = { $lte: new Date(query.deadlineBefore) };
   if (query.remoteOnly) filter.isRemote = true;
-  if (query.search) filter.$text = { $search: query.search };
+  if (query.search) {
+    filter.$or = [
+      { title: { $regex: query.search, $options: 'i' } },
+      { tags: { $regex: query.search, $options: 'i' } },
+      { description: { $regex: query.search, $options: 'i' } }
+    ];
+  }
   if (query.techStack) filter.techStack = { $in: query.techStack.split(',').map((entry) => entry.trim()) };
   if (query.prizeMin !== undefined || query.prizeMax !== undefined) {
     filter['prizes.total'] = {
@@ -121,8 +130,24 @@ export async function getChallenges(req: Request, res: Response): Promise<void> 
     };
     const page = query.page ?? 1;
     const limit = query.limit ?? 12;
-    const data = await Challenge.find(filter).sort(sortMap[query.sortBy ?? 'newest']).skip((page - 1) * limit).limit(limit).lean();
-    const response = { success: true, message: 'Challenges loaded', data, meta: { page, limit, hasMore: data.length === limit } };
+    const total = await Challenge.countDocuments(filter);
+    const data = await Challenge.find(filter)
+      .populate('companyId', 'companyName logo slug description size location website')
+      .sort(sortMap[query.sortBy ?? 'newest'])
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+    const response = { 
+      success: true, 
+      message: 'Challenges loaded', 
+      data, 
+      meta: { 
+        page, 
+        limit, 
+        total, 
+        hasMore: page * limit < total 
+      } 
+    };
     await redisClient.set(cacheKey, JSON.stringify(response), { EX: 300 });
     res.status(200).json(response);
   } catch (error: unknown) {
@@ -138,7 +163,9 @@ export async function getChallenges(req: Request, res: Response): Promise<void> 
  * @throws AppError when the challenge is missing.
  */
 export async function getChallengeById(req: Request, res: Response): Promise<void> {
-  const challenge = await Challenge.findById(req.params.id).lean();
+  const challenge = await Challenge.findById(req.params.id)
+    .populate('companyId', 'companyName logo slug description size location website')
+    .lean();
   if (!challenge) {
     throw new AppError('Challenge not found', 404, 'CHALLENGE_NOT_FOUND');
   }

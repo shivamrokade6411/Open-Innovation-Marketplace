@@ -29,6 +29,7 @@ const challengeSchema = new Schema<any>(
     requirements: { type: [String], default: [] },
     maxParticipants: { type: Number, default: 0 },
     currentParticipants: { type: Number, default: 0 },
+    submissionsCount: { type: Number, default: 0, index: true },
     views: { type: Number, default: 0 },
     isRemote: { type: Boolean, default: true },
     attachments: { type: [String], default: [] },
