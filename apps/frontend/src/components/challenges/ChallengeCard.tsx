@@ -49,6 +49,32 @@ export function ChallengeCard({ challenge }: ChallengeCardProps): JSX.Element {
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 border border-emerald-500/20';
+      case 'review':
+        return 'bg-amber-500/10 text-amber-500 dark:bg-amber-500/20 border border-amber-500/20';
+      case 'completed':
+        return 'bg-slate-500/10 text-slate-400 dark:bg-slate-500/20 border border-slate-500/20';
+      default:
+        return 'bg-rose-500/10 text-rose-500 dark:bg-rose-500/20 border border-rose-500/20';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'Open';
+      case 'review':
+        return 'Judging';
+      case 'completed':
+        return 'Closed';
+      default:
+        return status;
+    }
+  };
+
   const company = typeof challenge.companyId === 'object' && challenge.companyId !== null
     ? (challenge.companyId as any)
     : null;
@@ -60,6 +86,21 @@ export function ChallengeCard({ challenge }: ChallengeCardProps): JSX.Element {
     .join('')
     .slice(0, 2)
     .toUpperCase();
+
+  const now = new Date();
+  const deadlineDate = new Date(challenge.deadline);
+  const diffTime = deadlineDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  let daysLeftText = '';
+  if (diffDays < 0) {
+    daysLeftText = 'Ended';
+  } else if (diffDays === 0) {
+    daysLeftText = 'Ends today';
+  } else if (diffDays === 1) {
+    daysLeftText = '1 day left';
+  } else {
+    daysLeftText = `${diffDays} days left`;
+  }
 
   return (
     <motion.div variants={cardHover} initial="rest" whileHover="hover" animate="rest" className="h-full">
@@ -104,8 +145,11 @@ export function ChallengeCard({ challenge }: ChallengeCardProps): JSX.Element {
             <span className={cn('px-2 py-0.5 rounded-full font-semibold capitalize text-[10px]', getDifficultyColor(challenge.difficulty))}>
               {challenge.difficulty}
             </span>
+            <span className={cn('px-2 py-0.5 rounded-full font-semibold capitalize text-[10px]', getStatusBadge(challenge.status))}>
+              {getStatusLabel(challenge.status)}
+            </span>
             <span>•</span>
-            <span>Deadline {deadline}</span>
+            <span>{daysLeftText}</span>
             <span>•</span>
             <span>{challenge.submissionsCount ?? 0} submissions</span>
             <span>•</span>
