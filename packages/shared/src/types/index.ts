@@ -60,16 +60,22 @@ export interface IUser {
   passwordHash: string;
   role: UserRole;
   avatar?: string;
-  bio?: string;
-  skills: string[];
-  github?: string;
-  linkedin?: string;
-  portfolioUrl?: string;
   innovationScore: number;
   isVerified: boolean;
   isActive: boolean;
   verificationToken?: string;
   refreshTokens: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IInnovatorProfile {
+  _id: string;
+  userId: string;
+  bio?: string;
+  skills: string[];
+  portfolioLinks: string[];
+  totalWins: number;
   createdAt: Date;
   updatedAt: Date;
 }

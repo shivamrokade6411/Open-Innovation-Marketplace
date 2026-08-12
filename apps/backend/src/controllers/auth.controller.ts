@@ -10,6 +10,7 @@ import type { Request, Response } from 'express';
 import { User } from '../models/User.model';
 import { Company } from '../models/Company.model';
 import { Submission } from '../models/Submission.model';
+import { InnovatorProfile } from '../models/InnovatorProfile.model';
 import { emailTransport } from '../config/email';
 import { AppError, unauthorized, validationError } from '../middleware/errorHandler.middleware';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.utils';
@@ -23,18 +24,18 @@ function createAuthTokens(userId: string, role: 'admin' | 'company' | 'innovator
   };
 }
 
-function stripSensitiveUser(user: { _id: unknown; name: string; email: string; role: string; avatar?: string; bio?: string; skills: string[]; github?: string; linkedin?: string; portfolioUrl?: string; innovationScore: number; isVerified: boolean; isActive: boolean; createdAt: Date; updatedAt: Date; }): Record<string, unknown> {
+function stripSensitiveUser(user: any, profile?: any): Record<string, unknown> {
   return {
     id: String(user._id),
     name: user.name,
     email: user.email,
     role: user.role,
     avatar: user.avatar,
-    bio: user.bio,
-    skills: user.skills,
-    github: user.github,
-    linkedin: user.linkedin,
-    portfolioUrl: user.portfolioUrl,
+    bio: profile?.bio || '',
+    skills: profile?.skills || [],
+    github: profile?.portfolioLinks?.[0] || '',
+    linkedin: '',
+    portfolioUrl: profile?.portfolioLinks?.[0] || '',
     innovationScore: user.innovationScore,
     isVerified: user.isVerified,
     isActive: user.isActive,
@@ -84,19 +85,16 @@ export async function register(req: Request, res: Response): Promise<void> {
       email: payload.email,
       passwordHash: payload.password,
       role: payload.role,
-      skills: payload.skills ?? [],
-      bio: payload.bio,
-      github: payload.github || undefined,
-      linkedin: payload.linkedin || undefined,
-      portfolioUrl: payload.portfolioUrl || undefined,
       isVerified: false,
       isActive: true,
       verificationToken: verificationTokenHash,
       refreshTokens: []
     });
 
+    let profileObj = null;
+
     if (payload.role === 'company' && payload.companyName) {
-      await Company.create({
+      profileObj = await Company.create({
         userId: user._id,
         companyName: payload.companyName,
         verificationStatus: 'pending',
@@ -104,6 +102,14 @@ export async function register(req: Request, res: Response): Promise<void> {
         totalHires: 0,
         rating: 0,
         socialLinks: {}
+      });
+    } else if (payload.role === 'innovator') {
+      profileObj = await InnovatorProfile.create({
+        userId: user._id,
+        bio: payload.bio || '',
+        skills: payload.skills ?? [],
+        portfolioLinks: [payload.portfolioUrl].filter(Boolean) as string[],
+        totalWins: 0
       });
     }
 
@@ -119,7 +125,7 @@ export async function register(req: Request, res: Response): Promise<void> {
       message: 'Registration successful',
       data: {
         tokens,
-        user: stripSensitiveUser(user.toObject()),
+        user: stripSensitiveUser(user.toObject(), profileObj),
         verifyToken: process.env.NODE_ENV !== 'production' ? verifyToken : undefined
       }
     });
@@ -325,7 +331,13 @@ export async function getMe(req: Request, res: Response): Promise<void> {
     if (!user) {
       throw unauthorized('User not found');
     }
-    res.status(200).json({ success: true, message: 'Profile loaded', data: stripSensitiveUser(user) });
+    let profile = null;
+    if (user.role === 'innovator') {
+      profile = await InnovatorProfile.findOne({ userId: user._id }).lean();
+    } else if (user.role === 'company') {
+      profile = await Company.findOne({ userId: user._id }).lean();
+    }
+    res.status(200).json({ success: true, message: 'Profile loaded', data: stripSensitiveUser(user, profile) });
   } catch (error: unknown) {
     throw error instanceof Error ? error : new AppError('Failed to load profile', 500, 'PROFILE_FAILED');
   }
@@ -343,12 +355,18 @@ export async function getUserProfileById(req: Request, res: Response): Promise<v
     if (!user) {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
+    let profile = null;
+    if (user.role === 'innovator') {
+      profile = await InnovatorProfile.findOne({ userId: user._id }).lean();
+    } else if (user.role === 'company') {
+      profile = await Company.findOne({ userId: user._id }).lean();
+    }
     const submissions = await Submission.find({ userId: user._id, status: 'winner' }).populate('challengeId').lean();
     res.status(200).json({
       success: true,
       message: 'User profile loaded',
       data: {
-        user: stripSensitiveUser(user),
+        user: stripSensitiveUser(user, profile),
         wins: submissions.map((s: any) => ({
           id: String(s._id),
           title: s.title,

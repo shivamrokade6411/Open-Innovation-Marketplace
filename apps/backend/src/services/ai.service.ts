@@ -101,8 +101,8 @@ export async function analyzeResume(resumeText: string): Promise<{ skills: strin
  * @returns Promise resolving to a percentage and missing skills.
  * @throws Error When matching fails.
  */
-export async function matchSkills(userProfile: IUser, challenge: IChallenge): Promise<SkillMatchResult> {
-  const missingSkills = challenge.techStack.filter((skill) => !userProfile.skills.includes(skill));
+export async function matchSkills(userProfile: any, challenge: IChallenge): Promise<SkillMatchResult> {
+  const missingSkills = challenge.techStack.filter((skill) => !(userProfile.skills || []).includes(skill));
   const matchPercentage = clampScore(((challenge.techStack.length - missingSkills.length) / Math.max(challenge.techStack.length, 1)) * 100);
   return { matchPercentage, missingSkills };
 }

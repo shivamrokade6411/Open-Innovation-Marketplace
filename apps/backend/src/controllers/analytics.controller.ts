@@ -10,6 +10,7 @@ import { Company } from '../models/Company.model';
 import { Challenge } from '../models/Challenge.model';
 import { Submission } from '../models/Submission.model';
 import { Payment } from '../models/Payment.model';
+import { InnovatorProfile } from '../models/InnovatorProfile.model';
 import { AppError } from '../middleware/errorHandler.middleware';
 
 /**
@@ -70,15 +71,24 @@ export async function getInnovatorStats(req: Request, res: Response): Promise<vo
 export async function getLeaderboard(req: Request, res: Response): Promise<void> {
   const page = Number(req.query.page ?? 1);
   const limit = Number(req.query.limit ?? 20);
-  const users = await User.find().sort({ innovationScore: -1 }).skip((page - 1) * limit).limit(limit).lean();
-  const data = users.map((user, index) => ({
-    rank: (page - 1) * limit + index + 1,
-    userId: String(user._id),
-    name: user.name,
-    avatar: user.avatar,
-    innovationScore: user.innovationScore,
-    wins: 0,
-    submissions: 0
-  }));
+  const users = await User.find({ role: 'innovator' }).sort({ innovationScore: -1 }).skip((page - 1) * limit).limit(limit).lean();
+  
+  const userIds = users.map((u) => u._id);
+  const profiles = await InnovatorProfile.find({ userId: { $in: userIds } }).lean();
+  const profileMap = new Map(profiles.map((p) => [String(p.userId), p]));
+
+  const data = users.map((user, index) => {
+    const profile = profileMap.get(String(user._id));
+    return {
+      rank: (page - 1) * limit + index + 1,
+      userId: String(user._id),
+      name: user.name,
+      avatar: user.avatar,
+      innovationScore: user.innovationScore,
+      wins: profile?.totalWins || 0,
+      submissions: 0,
+      skills: profile?.skills || []
+    };
+  });
   res.status(200).json({ success: true, message: 'Leaderboard loaded', data, meta: { page, limit, nextCursor: null } });
 }

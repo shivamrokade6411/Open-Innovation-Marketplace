@@ -16,6 +16,7 @@ import { User } from '../models/User.model';
 import { Company } from '../models/Company.model';
 import { Challenge } from '../models/Challenge.model';
 import { Submission } from '../models/Submission.model';
+import { InnovatorProfile } from '../models/InnovatorProfile.model';
 import { connectDatabase } from '../config/database';
 
 const companiesData = [
@@ -144,6 +145,7 @@ async function seed() {
     await Company.deleteMany({});
     await Challenge.deleteMany({});
     await Submission.deleteMany({});
+    await InnovatorProfile.deleteMany({});
 
     // 2. Create Admin User
     console.log('Seeding admin user...');
@@ -153,8 +155,7 @@ async function seed() {
       passwordHash: 'Admin@123',
       role: 'admin',
       isVerified: true,
-      isActive: true,
-      skills: ['Security', 'Management']
+      isActive: true
     });
 
     // 3. Create Companies (User + Company profile)
@@ -167,8 +168,7 @@ async function seed() {
         passwordHash: c.passwordHash,
         role: c.role,
         isVerified: true,
-        isActive: true,
-        skills: []
+        isActive: true
       });
 
       const companyProfile = await Company.create({
@@ -203,8 +203,14 @@ async function seed() {
         passwordHash: inn.passwordHash,
         role: 'innovator',
         isVerified: true,
-        isActive: true,
-        skills: inn.skills
+        isActive: true
+      });
+      await InnovatorProfile.create({
+        userId: user._id.toString(),
+        bio: `${inn.name} is a passionate innovator.`,
+        skills: inn.skills,
+        portfolioLinks: [`https://github.com/${inn.name.toLowerCase().replace(' ', '')}`],
+        totalWins: 0
       });
       seededInnovators.push(user);
     }
