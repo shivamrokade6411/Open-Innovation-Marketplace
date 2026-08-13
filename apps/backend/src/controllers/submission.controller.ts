@@ -47,11 +47,26 @@ export async function createSubmission(req: Request, res: Response): Promise<voi
       throw new AppError('Duplicate submission', 409, 'DUPLICATE_SUBMISSION');
     }
 
-    const files = req.files as Express.Multer.File[] | undefined;
-    const pdf = files?.find((file) => file.mimetype === 'application/pdf');
-    const video = files?.find((file) => file.mimetype.startsWith('video/'));
-    const image = files?.find((file) => file.mimetype.startsWith('image/'));
-    const code = files?.find((file) => file.originalname.endsWith('.zip'));
+    const files = req.files;
+    let pdf: Express.Multer.File | undefined;
+    let video: Express.Multer.File | undefined;
+    let image: Express.Multer.File | undefined;
+    let code: Express.Multer.File | undefined;
+
+    if (files) {
+      if (Array.isArray(files)) {
+        pdf = files.find((file) => file.mimetype === 'application/pdf');
+        video = files.find((file) => file.mimetype.startsWith('video/'));
+        image = files.find((file) => file.mimetype.startsWith('image/'));
+        code = files.find((file) => file.originalname.endsWith('.zip'));
+      } else {
+        const filesMap = files as { [fieldname: string]: Express.Multer.File[] };
+        pdf = filesMap.pdf?.[0];
+        video = filesMap.video?.[0];
+        image = filesMap.image?.[0];
+        code = filesMap.code?.[0];
+      }
+    }
 
     const pdfUrl = pdf ? await uploadPDF(pdf.buffer, pdf.originalname) : undefined;
     const videoUrl = video ? await uploadVideo(video.buffer, video.originalname) : undefined;

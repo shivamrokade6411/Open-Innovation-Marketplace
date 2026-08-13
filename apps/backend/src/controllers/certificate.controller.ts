@@ -39,9 +39,9 @@ export const issueCertificate = async (req: AuthRequest, res: Response) => {
     }
 
     // Get submission details
-    const submission = await Submission.findById(submissionId)
+    const submission = (await Submission.findById(submissionId)
       .populate('userId', 'name email')
-      .populate('challengeId', 'title');
+      .populate('challengeId', 'title')) as any;
 
     if (!submission) {
       return res.status(404).json({ success: false, message: 'Submission not found' });
@@ -112,10 +112,10 @@ export const verifyCertificate = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const certificate = await Certificate.findOne({ hash })
+    const certificate = (await Certificate.findOne({ hash })
       .populate('userId', 'name email avatar')
       .populate('challengeId', 'title description')
-      .populate('submissionId', 'title score');
+      .populate('submissionId', 'title score')) as any;
 
     if (!certificate) {
       return res.json({
@@ -169,10 +169,10 @@ export const getCertificate = async (req: AuthRequest, res: Response) => {
     const { certificateId } = req.params;
     const userId = req.user?.id;
 
-    const certificate = await Certificate.findById(certificateId)
+    const certificate = (await Certificate.findById(certificateId)
       .populate('userId', 'name email avatar')
       .populate('challengeId', 'title description')
-      .populate('submissionId');
+      .populate('submissionId')) as any;
 
     if (!certificate) {
       return res.status(404).json({
@@ -270,12 +270,20 @@ export const revokeCertificate = async (req: AuthRequest, res: Response) => {
     const { certificateId } = req.params;
     const { reason } = req.body;
 
+    const cert = await Certificate.findById(certificateId);
+    if (!cert) {
+      return res.status(404).json({
+        success: false,
+        message: 'Certificate not found'
+      });
+    }
+
     const certificate = await Certificate.findByIdAndUpdate(
       certificateId,
       {
         isRevoked: true,
         metadata: {
-          ...certificate?.metadata,
+          ...cert.metadata,
           revokedAt: new Date().toISOString(),
           revokeReason: reason
         }

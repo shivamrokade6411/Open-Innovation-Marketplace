@@ -4,14 +4,15 @@
  * Date: 2026-06-28
  */
 
+import type { Request } from 'express';
 import type { IJWTPayload } from '@oim/shared';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: IJWTPayload;
+      user?: IJWTPayload & { id?: string };
     }
   }
 }
 
-export {};
+export type AuthRequest = Request;

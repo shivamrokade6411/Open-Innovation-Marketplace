@@ -24,6 +24,38 @@ function createAuthTokens(userId: string, role: 'admin' | 'company' | 'innovator
   };
 }
 
+function setAuthCookies(res: Response, tokens: { accessToken: string; refreshToken: string }, role: string) {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  res.cookie('accessToken', tokens.accessToken, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    maxAge: 15 * 60 * 1000 // 15 minutes
+  });
+
+  res.cookie('refreshToken', tokens.refreshToken, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+
+  res.cookie('userRole', role, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  });
+}
+
+function clearAuthCookies(res: Response) {
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.clearCookie('accessToken', { httpOnly: true, secure: isProduction, sameSite: 'lax' });
+  res.clearCookie('refreshToken', { httpOnly: true, secure: isProduction, sameSite: 'lax' });
+  res.clearCookie('userRole', { httpOnly: true, secure: isProduction, sameSite: 'lax' });
+}
+
 function stripSensitiveUser(user: any, profile?: any): Record<string, unknown> {
   return {
     id: String(user._id),
@@ -120,6 +152,8 @@ export async function register(req: Request, res: Response): Promise<void> {
     user.refreshTokens.push(refreshTokenHash);
     await user.save();
 
+    setAuthCookies(res, tokens, user.role);
+
     res.status(201).json({
       success: true,
       message: 'Registration successful',
@@ -167,6 +201,8 @@ export async function login(req: Request, res: Response): Promise<void> {
     user.refreshTokens.push(refreshTokenHash);
     await user.save();
 
+    setAuthCookies(res, tokens, user.role);
+
     res.status(200).json({ success: true, message: 'Login successful', data: { tokens, user: stripSensitiveUser(user.toObject()) } });
   } catch (error: unknown) {
     if (error instanceof Error && error.name === 'ZodError') {
@@ -193,6 +229,7 @@ export async function logout(req: Request, res: Response): Promise<void> {
     }
     user.refreshTokens = [];
     await user.save();
+    clearAuthCookies(res);
     res.status(200).json({ success: true, message: 'Logged out successfully', data: null });
   } catch (error: unknown) {
     if (error instanceof Error && error.name === 'ZodError') {
@@ -228,6 +265,8 @@ export async function refreshToken(req: Request, res: Response): Promise<void> {
     const newHash = await bcrypt.hash(tokens.refreshToken, 12);
     user.refreshTokens = [newHash];
     await user.save();
+
+    setAuthCookies(res, tokens, user.role);
 
     res.status(200).json({ success: true, message: 'Token rotated', data: { tokens } });
   } catch (error: unknown) {

@@ -27,13 +27,14 @@ function extractBearerToken(header: string | undefined): string | null {
  * @throws Unauthorized error when the token is missing or invalid.
  */
 export function authenticateJWT(req: Request, res: Response, next: NextFunction): void {
-  const token = extractBearerToken(req.headers.authorization);
+  const token = extractBearerToken(req.headers.authorization) || req.cookies?.accessToken;
   if (!token) {
     return next(unauthorized('Authentication required'));
   }
 
   try {
-    req.user = verifyAccessToken(token);
+    const decoded = verifyAccessToken(token);
+    req.user = { ...decoded, id: decoded.userId };
     return next();
   } catch (error: unknown) {
     if (error instanceof TokenExpiredError) {
@@ -52,13 +53,14 @@ export function authenticateJWT(req: Request, res: Response, next: NextFunction)
  * @throws Never throws directly; forwards token errors when present.
  */
 export function optionalAuth(req: Request, res: Response, next: NextFunction): void {
-  const token = extractBearerToken(req.headers.authorization);
+  const token = extractBearerToken(req.headers.authorization) || req.cookies?.accessToken;
   if (!token) {
     return next();
   }
 
   try {
-    req.user = verifyAccessToken(token);
+    const decoded = verifyAccessToken(token);
+    req.user = { ...decoded, id: decoded.userId };
     return next();
   } catch {
     return next();

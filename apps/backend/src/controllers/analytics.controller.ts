@@ -11,7 +11,8 @@ import { Challenge } from '../models/Challenge.model';
 import { Submission } from '../models/Submission.model';
 import { Payment } from '../models/Payment.model';
 import { InnovatorProfile } from '../models/InnovatorProfile.model';
-import { AppError } from '../middleware/errorHandler.middleware';
+import { Certificate } from '../models/Certificate.model';
+import { AppError, unauthorized } from '../middleware/errorHandler.middleware';
 
 /**
  * Get platform statistics for admins.
@@ -57,8 +58,27 @@ export async function getCompanyDashboardStats(req: Request, res: Response): Pro
  * @throws AppError when authentication is missing.
  */
 export async function getInnovatorStats(req: Request, res: Response): Promise<void> {
-  const submissions = await Submission.find({ userId: req.user?.userId }).lean();
-  res.status(200).json({ success: true, message: 'Innovator stats loaded', data: { totalSubmissions: submissions.length, activeChallenges: 0, innovationScore: submissions.reduce((sum, submission) => sum + Number(submission.score ?? 0), 0), certificates: 0 } });
+  if (!req.user) {
+    throw unauthorized('Authentication required');
+  }
+  const submissions = await Submission.find({ userId: req.user.userId }).lean();
+  const challengeIds = submissions.map((s) => s.challengeId);
+  
+  const [activeChallenges, certificatesCount] = await Promise.all([
+    Challenge.countDocuments({ _id: { $in: challengeIds }, status: 'active' }),
+    Certificate.countDocuments({ userId: req.user.userId, isRevoked: false })
+  ]);
+
+  res.status(200).json({
+    success: true,
+    message: 'Innovator stats loaded',
+    data: {
+      totalSubmissions: submissions.length,
+      activeChallenges,
+      innovationScore: submissions.reduce((sum, submission) => sum + Number(submission.score ?? 0), 0),
+      certificates: certificatesCount
+    }
+  });
 }
 
 /**

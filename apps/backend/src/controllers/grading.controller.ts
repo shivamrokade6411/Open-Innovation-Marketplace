@@ -83,11 +83,14 @@ export const gradeSubmission = async (req: AuthRequest, res: Response) => {
     const startTime = Date.now();
 
     // Call OpenAI API
-    const response = await openai.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 1000,
-      system: GRADING_SYSTEM_PROMPT,
       messages: [
+        {
+          role: 'system',
+          content: GRADING_SYSTEM_PROMPT
+        },
         {
           role: 'user',
           content: `Please grade this code submission:\n\n${codeContent}`
@@ -95,20 +98,17 @@ export const gradeSubmission = async (req: AuthRequest, res: Response) => {
       ]
     });
 
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from OpenAI');
-    }
+    const contentText = response.choices[0].message?.content || '';
 
     // Parse JSON response
     let gradingData;
     try {
       // Extract JSON from response (may have markdown code blocks)
-      const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+      const jsonMatch = contentText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('No JSON found in response');
       gradingData = JSON.parse(jsonMatch[0]);
     } catch (parseError) {
-      console.error('Failed to parse grading response:', content.text);
+      console.error('Failed to parse grading response:', contentText);
       return res.status(500).json({
         success: false,
         message: 'Failed to parse AI grading response'

@@ -1,46 +1,62 @@
 'use client';
 
-import { DollarSign, Users, UserPlus, Percent } from 'lucide-react';
+import { CheckSquare, Trophy, Sparkles, Award, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../services/api';
 import { StatCard } from '../ui/StatCard';
 
 export function StatsRow(): JSX.Element {
-  // Sparkline mock values for each card
-  const revenueSpark = [110, 115, 121, 118, 126, 124.5];
-  const usersSpark = [8200, 8300, 8350, 8400, 8420, 8492];
-  const signupsSpark = [980, 1050, 1100, 1050, 1180, 1230];
-  const conversionSpark = [4.8, 4.7, 4.9, 4.5, 4.7, 4.6];
+  const { data: stats, isLoading, error } = useQuery({
+    queryKey: ['innovator-stats'],
+    queryFn: async () => {
+      const response = await api.get('/api/innovators/stats');
+      return response.data.data;
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-40 rounded-2xl bg-white/5 border border-white/10 animate-pulse flex items-center justify-center">
+            <Loader2 className="h-6 w-6 text-slate-500 animate-spin" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const values = stats || { totalSubmissions: 0, activeChallenges: 0, innovationScore: 0, certificates: 0 };
 
   return (
     <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        label="Total Revenue"
-        value={124500}
-        icon={DollarSign}
-        trend={12.5}
-        sparklineData={revenueSpark}
-        isCurrency
+        label="Total Submissions"
+        value={values.totalSubmissions}
+        icon={CheckSquare}
+        trend={values.totalSubmissions > 0 ? 100 : 0}
+        sparklineData={[0, values.totalSubmissions]}
       />
       <StatCard
-        label="Active Users"
-        value={8492}
-        icon={Users}
-        trend={3.2}
-        sparklineData={usersSpark}
+        label="Active Challenges"
+        value={values.activeChallenges}
+        icon={Trophy}
+        trend={values.activeChallenges > 0 ? 100 : 0}
+        sparklineData={[0, values.activeChallenges]}
       />
       <StatCard
-        label="New Signups"
-        value={1230}
-        icon={UserPlus}
-        trend={18.7}
-        sparklineData={signupsSpark}
+        label="Innovation Score"
+        value={values.innovationScore}
+        icon={Sparkles}
+        trend={values.innovationScore > 0 ? 100 : 0}
+        sparklineData={[0, values.innovationScore]}
       />
       <StatCard
-        label="Conversion Rate"
-        value={4.6}
-        icon={Percent}
-        trend={-0.8}
-        sparklineData={conversionSpark}
-        isPercentage
+        label="Certificates Earned"
+        value={values.certificates}
+        icon={Award}
+        trend={values.certificates > 0 ? 100 : 0}
+        sparklineData={[0, values.certificates]}
       />
     </section>
   );

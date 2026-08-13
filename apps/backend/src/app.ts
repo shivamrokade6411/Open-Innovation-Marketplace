@@ -20,7 +20,9 @@ import feedbackRouter from './routes/feedback.routes';
 import gradingRouter from './routes/grading.routes';
 import certificateRouter from './routes/certificate.routes';
 import { companyRouter } from './routes/company.routes';
-import { getPlatformStats, getLeaderboard } from './controllers/analytics.controller';
+import { getPlatformStats, getLeaderboard, getCompanyDashboardStats, getInnovatorStats } from './controllers/analytics.controller';
+import { authenticateJWT } from './middleware/auth.middleware';
+import { companyOnly } from './middleware/role.middleware';
 
 export const app = express();
 
@@ -39,6 +41,8 @@ app.get('/api/health', (_req, res) => {
 
 app.get('/api/platform-stats', getPlatformStats);
 app.get('/api/leaderboard', getLeaderboard);
+app.get('/api/companies/dashboard-stats', authenticateJWT, companyOnly, getCompanyDashboardStats);
+app.get('/api/innovators/stats', authenticateJWT, getInnovatorStats);
  
 app.use('/api/auth', authRouter);
 app.use('/api/challenges', challengeRouter);

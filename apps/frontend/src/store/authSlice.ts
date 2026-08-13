@@ -49,6 +49,19 @@ async function postJson<T>(url: string, body: Record<string, unknown>): Promise<
   return data;
 }
 
+async function getJson<T>(url: string): Promise<T> {
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include'
+  });
+  const data = await response.json() as T;
+  if (!response.ok) {
+    throw new Error((data as { message?: string }).message ?? 'Request failed');
+  }
+  return data;
+}
+
 export const loginThunk = createAsyncThunk<AuthResponse, Credentials>('auth/login', async (credentials) => {
   const response = await postJson<{ data: AuthResponse }>('/api/auth/login', credentials);
   return response.data;
@@ -65,6 +78,11 @@ export const logoutThunk = createAsyncThunk<void, string>('auth/logout', async (
 
 export const refreshTokenThunk = createAsyncThunk<AuthResponse, string>('auth/refreshToken', async (refreshToken) => {
   const response = await postJson<{ data: AuthResponse }>('/api/auth/refresh-token', { refreshToken });
+  return response.data;
+});
+
+export const fetchMeThunk = createAsyncThunk<IUser, void>('auth/fetchMe', async () => {
+  const response = await getJson<{ data: IUser }>('/api/auth/me');
   return response.data;
 });
 
@@ -121,6 +139,20 @@ const authSlice = createSlice({
         state.user = null;
         state.accessToken = null;
         state.refreshToken = null;
+        state.isAuthenticated = false;
+      })
+      .addCase(fetchMeThunk.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchMeThunk.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+      })
+      .addCase(fetchMeThunk.rejected, (state, action) => {
+        state.isLoading = false;
+        state.user = null;
         state.isAuthenticated = false;
       });
   }
