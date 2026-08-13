@@ -45,18 +45,31 @@ function startProcess(name, command, args) {
 const mongoBin = path.join(__dirname, '.local-db', 'mongodb', 'mongodb-win32-x86_64-windows-7.0.6', 'bin', 'mongod.exe');
 const mongoData = path.join(__dirname, '.local-db', 'mongodb-data');
 const redisBin = path.join(__dirname, '.local-db', 'redis', 'redis-server.exe');
+const postgresBin = 'C:\\Program Files\\PostgreSQL\\18\\bin\\postgres.exe';
+const postgresData = path.join(__dirname, '.local-db', 'postgres-data');
 
 // Double quotes for paths with spaces
 const mongoCmd = `"${mongoBin}"`;
 const redisCmd = `"${redisBin}"`;
+const postgresCmd = `"${postgresBin}"`;
+
+// Delete postmaster.pid lock file if exists
+try {
+  const fs = require('fs');
+  const lockFile = path.join(postgresData, 'postmaster.pid');
+  if (fs.existsSync(lockFile)) {
+    fs.unlinkSync(lockFile);
+  }
+} catch (e) {}
 
 const mongodb = startProcess('MongoDB', mongoCmd, ['--dbpath', `"${mongoData}"`, '--port', '27017']);
 const redis = startProcess('Redis', redisCmd, ['--port', '6379']);
+const postgres = startProcess('PostgreSQL', postgresCmd, ['-D', `"${postgresData}"`, '-p', '5433']);
 
 let backend;
 let frontend;
 
-// Delay starting the frontend and backend slightly to allow MongoDB and Redis to initialize
+// Delay starting the frontend and backend slightly to allow MongoDB, Redis and Postgres to initialize
 setTimeout(() => {
   backend = startProcess('Backend', 'pnpm', ['--filter', 'backend', 'dev']);
   frontend = startProcess('Frontend', 'pnpm', ['--filter', 'frontend', 'dev']);
@@ -68,6 +81,7 @@ const cleanup = () => {
   if (frontend) frontend.kill('SIGINT');
   mongodb.kill('SIGINT');
   redis.kill('SIGINT');
+  postgres.kill('SIGINT');
   
   setTimeout(() => {
     process.exit(0);
