@@ -47,11 +47,50 @@ export default function ChallengesPage(): JSX.Element {
   const [sortBy, setSortBy] = useState('newest');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedDeadline, setSelectedDeadline] = useState<string>('all');
+  const [industry, setIndustry] = useState<string>('all');
+  const [company, setCompany] = useState<string>('');
+  const [skill, setSkill] = useState<string>('');
 
   // Interactive UI States
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Initialize state from URL query parameters on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('search')) setSearch(params.get('search') || '');
+      if (params.get('category')) setSelectedCategory(params.get('category') || 'all');
+      if (params.get('industry')) setIndustry(params.get('industry') || 'all');
+      if (params.get('company')) setCompany(params.get('company') || '');
+      if (params.get('skill')) setSkill(params.get('skill') || '');
+      if (params.get('minPrize')) setMinPrize(Number(params.get('minPrize') || 0));
+      if (params.get('sortBy')) setSortBy(params.get('sortBy') || 'newest');
+      if (params.get('status')) setSelectedStatus(params.get('status') || 'all');
+      if (params.get('deadline')) setSelectedDeadline(params.get('deadline') || 'all');
+    }
+  }, []);
+
+  // Update URL parameters when filter state changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (selectedCategory && selectedCategory !== 'all') params.set('category', selectedCategory);
+      if (industry && industry !== 'all') params.set('industry', industry);
+      if (company) params.set('company', company);
+      if (skill) params.set('skill', skill);
+      if (minPrize > 0) params.set('minPrize', minPrize.toString());
+      if (sortBy && sortBy !== 'newest') params.set('sortBy', sortBy);
+      if (selectedStatus && selectedStatus !== 'all') params.set('status', selectedStatus);
+      if (selectedDeadline && selectedDeadline !== 'all') params.set('deadline', selectedDeadline);
+
+      const queryString = params.toString();
+      const newUrl = `${window.location.pathname}${queryString ? '?' + queryString : ''}`;
+      window.history.replaceState({ path: newUrl }, '', newUrl);
+    }
+  }, [search, selectedCategory, industry, company, skill, minPrize, sortBy, selectedStatus, selectedDeadline]);
 
   // Debounced search trigger
   useEffect(() => {
@@ -69,15 +108,18 @@ export default function ChallengesPage(): JSX.Element {
       setIsFiltering(false);
     }, 300);
     return () => clearTimeout(handler);
-  }, [debouncedSearch, selectedCategory, selectedDifficulties, remoteOnly, minPrize, sortBy, selectedStatus, selectedDeadline]);
+  }, [debouncedSearch, selectedCategory, selectedDifficulties, remoteOnly, minPrize, sortBy, selectedStatus, selectedDeadline, industry, company, skill]);
 
   const { data: responseData, isLoading, error } = useQuery<{ success: boolean; data: IChallenge[]; meta: { page: number; limit: number; total: number; hasMore: boolean } }>({
-    queryKey: ['challenges', { debouncedSearch, selectedCategory, selectedDifficulties, remoteOnly, minPrize, sortBy, currentPage, selectedStatus, selectedDeadline }],
+    queryKey: ['challenges', { debouncedSearch, selectedCategory, selectedDifficulties, remoteOnly, minPrize, sortBy, currentPage, selectedStatus, selectedDeadline, industry, company, skill }],
     queryFn: async () => {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000';
       const params = new URLSearchParams();
       if (debouncedSearch) params.append('search', debouncedSearch);
       if (selectedCategory && selectedCategory !== 'all') params.append('category', selectedCategory);
+      if (industry && industry !== 'all') params.append('industry', industry);
+      if (company) params.append('company', company);
+      if (skill) params.append('skill', skill);
       if (selectedDifficulties.length > 0) params.append('difficulty', selectedDifficulties.join(','));
       if (remoteOnly) params.append('remoteOnly', 'true');
       if (minPrize > 0) params.append('prizeMin', minPrize.toString());
@@ -89,6 +131,7 @@ export default function ChallengesPage(): JSX.Element {
         if (sortBy === 'prize-desc') backendSort = 'prize';
         if (sortBy === 'deadline-asc') backendSort = 'deadline';
         if (sortBy === 'popularity') backendSort = 'popularity';
+        if (sortBy === 'participants') backendSort = 'participants';
         params.append('sortBy', backendSort);
       }
 
@@ -148,6 +191,9 @@ export default function ChallengesPage(): JSX.Element {
     setSortBy('newest');
     setSelectedStatus('all');
     setSelectedDeadline('all');
+    setIndustry('all');
+    setCompany('');
+    setSkill('');
     setCurrentPage(1);
   };
 
@@ -212,6 +258,7 @@ export default function ChallengesPage(): JSX.Element {
             <option value="prize-desc">Prize: High to Low</option>
             <option value="deadline-asc">Deadline: Soonest</option>
             <option value="popularity">Most Popular</option>
+            <option value="participants">Most Participants</option>
           </select>
         </div>
       </div>
@@ -265,6 +312,57 @@ export default function ChallengesPage(): JSX.Element {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Industry Filter Dropdown */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Industry</label>
+            <select
+              value={industry}
+              onChange={(e) => {
+                setIndustry(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm outline-none transition dark:border-slate-800 dark:bg-slate-900 focus:border-brand-primary text-slate-800 dark:text-white"
+            >
+              <option value="all">All Industries</option>
+              <option value="AI">Artificial Intelligence</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Finance">Finance</option>
+              <option value="Education">Education</option>
+              <option value="Logistics">Logistics</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {/* Company Text Search */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Company</label>
+            <input
+              type="text"
+              placeholder="Search by company..."
+              value={company}
+              onChange={(e) => {
+                setCompany(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm outline-none transition dark:border-slate-800 dark:bg-slate-900 focus:border-brand-primary text-slate-800 dark:text-white"
+            />
+          </div>
+
+          {/* Skill Text Search */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Skill / Tech</label>
+            <input
+              type="text"
+              placeholder="e.g. Python, React, Solidity"
+              value={skill}
+              onChange={(e) => {
+                setSkill(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm outline-none transition dark:border-slate-800 dark:bg-slate-900 focus:border-brand-primary text-slate-800 dark:text-white"
+            />
           </div>
 
           {/* Status Dropdown */}
@@ -358,6 +456,7 @@ export default function ChallengesPage(): JSX.Element {
               <option value="prize-desc">Prize: High to Low</option>
               <option value="deadline-asc">Deadline: Soonest</option>
               <option value="popularity">Most Popular</option>
+              <option value="participants">Most Participants</option>
             </select>
           </div>
 

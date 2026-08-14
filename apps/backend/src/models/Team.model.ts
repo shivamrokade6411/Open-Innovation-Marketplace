@@ -22,6 +22,7 @@ const teamSchema = new Schema<any>(
     inviteCode: { type: String, required: true, unique: true },
     maxMembers: { type: Number, default: 5 },
     status: { type: String, default: 'active' },
+    logo: { type: String, default: '' },
     submissionId: { type: Schema.Types.ObjectId, ref: 'Submission' }
   },
   { timestamps: true }

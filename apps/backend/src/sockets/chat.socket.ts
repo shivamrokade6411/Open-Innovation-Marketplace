@@ -35,10 +35,21 @@ export function registerChatNamespace(io: Server): ReturnType<Server['of']> {
   namespace.on('connection', (socket: Socket) => {
     const user = socket.data.user as { userId: string };
     const userKey = `online:${user.userId}`;
-    void redisClient.set(userKey, '1', { EX: 60 });
+    void redisClient.set(userKey, '1', { EX: 3600 }); // Mark as online
 
     socket.on('join_conversation', (conversationId: string) => {
       socket.join(conversationId);
+    });
+
+    socket.on('join_workspace', (submissionId: string) => {
+      socket.join(`workspace:${submissionId}`);
+      // Broadcast user online status to workspace room
+      namespace.to(`workspace:${submissionId}`).emit('user_online', { userId: user.userId });
+    });
+
+    socket.on('leave_workspace', (submissionId: string) => {
+      socket.leave(`workspace:${submissionId}`);
+      namespace.to(`workspace:${submissionId}`).emit('user_offline', { userId: user.userId });
     });
 
     socket.on('send_message', async (payload: { conversationId: string; receiverId: string; content: string; type?: 'text' | 'file' | 'image' | 'system'; fileUrl?: string; fileName?: string }) => {
@@ -56,12 +67,28 @@ export function registerChatNamespace(io: Server): ReturnType<Server['of']> {
       namespace.to(payload.conversationId).emit('new_message', message.toObject());
     });
 
+    socket.on('send_workspace_comment', (payload: { submissionId: string; comment: any }) => {
+      namespace.to(`workspace:${payload.submissionId}`).emit('new_workspace_comment', payload.comment);
+    });
+
+    socket.on('send_workspace_activity', (payload: { submissionId: string; activity: any }) => {
+      namespace.to(`workspace:${payload.submissionId}`).emit('new_workspace_activity', payload.activity);
+    });
+
     socket.on('typing_start', (conversationId: string) => {
       socket.to(conversationId).emit('user_typing', { userId: user.userId });
     });
 
     socket.on('typing_stop', (conversationId: string) => {
       socket.to(conversationId).emit('user_stopped_typing', { userId: user.userId });
+    });
+
+    socket.on('workspace_typing_start', (submissionId: string) => {
+      socket.to(`workspace:${submissionId}`).emit('user_typing', { userId: user.userId });
+    });
+
+    socket.on('workspace_typing_stop', (submissionId: string) => {
+      socket.to(`workspace:${submissionId}`).emit('user_stopped_typing', { userId: user.userId });
     });
 
     socket.on('mark_read', async (conversationId: string) => {
@@ -75,6 +102,8 @@ export function registerChatNamespace(io: Server): ReturnType<Server['of']> {
 
     socket.on('disconnect', async () => {
       await redisClient.del(userKey);
+      // Emit offline to all rooms
+      namespace.emit('user_offline', { userId: user.userId });
     });
   });
 

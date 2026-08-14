@@ -18,19 +18,22 @@ import { challengeSchema } from '../validators/challenge.validator';
 const challengeQuerySchema = z.object({
   category: z.string().optional(),
   difficulty: z.string().optional(),
-  status: z.enum(['draft', 'active', 'review', 'completed', 'cancelled']).optional(),
+  status: z.string().optional(),
   prizeMin: z.coerce.number().optional(),
   prizeMax: z.coerce.number().optional(),
   deadlineBefore: z.string().optional(),
   techStack: z.string().optional(),
   remoteOnly: z.coerce.boolean().optional(),
   search: z.string().optional(),
-  sortBy: z.enum(['newest', 'prize', 'deadline', 'popularity']).optional(),
+  sortBy: z.enum(['newest', 'prize', 'deadline', 'popularity', 'participants']).optional(),
   page: z.coerce.number().optional(),
-  limit: z.coerce.number().optional()
+  limit: z.coerce.number().optional(),
+  industry: z.string().optional(),
+  company: z.string().optional(),
+  skill: z.string().optional()
 });
 
-function buildChallengeFilter(query: z.infer<typeof challengeQuerySchema>): Record<string, unknown> {
+async function buildChallengeFilter(query: z.infer<typeof challengeQuerySchema>): Promise<Record<string, unknown>> {
   const filter: Record<string, unknown> = {};
   if (query.category) filter.category = query.category;
   if (query.difficulty) {
@@ -40,20 +43,68 @@ function buildChallengeFilter(query: z.infer<typeof challengeQuerySchema>): Reco
   if (query.status) filter.status = query.status;
   if (query.deadlineBefore) filter.deadline = { $lte: new Date(query.deadlineBefore) };
   if (query.remoteOnly) filter.isRemote = true;
-  if (query.search) {
-    filter.$or = [
-      { title: { $regex: query.search, $options: 'i' } },
-      { tags: { $regex: query.search, $options: 'i' } },
-      { description: { $regex: query.search, $options: 'i' } }
-    ];
-  }
+
   if (query.techStack) filter.techStack = { $in: query.techStack.split(',').map((entry) => entry.trim()) };
+  if (query.skill) filter.techStack = { $in: query.skill.split(',').map((entry) => entry.trim()) };
+
   if (query.prizeMin !== undefined || query.prizeMax !== undefined) {
     filter['prizes.total'] = {
       ...(query.prizeMin !== undefined ? { $gte: query.prizeMin } : {}),
       ...(query.prizeMax !== undefined ? { $lte: query.prizeMax } : {})
     };
   }
+
+  // Handle company/industry filter queries
+  let matchingCompanyIds: any[] = [];
+  let filterByCompany = false;
+
+  if (query.industry) {
+    const companies = await Company.find({ industry: { $regex: query.industry, $options: 'i' } }).select('_id').lean();
+    matchingCompanyIds = companies.map((c) => c._id);
+    filterByCompany = true;
+  }
+
+  if (query.company) {
+    const mongoose = require('mongoose');
+    const isId = mongoose.Types.ObjectId.isValid(query.company);
+    const companies = await Company.find(
+      isId
+        ? { _id: query.company }
+        : { companyName: { $regex: query.company, $options: 'i' } }
+    ).select('_id').lean();
+    const ids = companies.map((c) => c._id);
+
+    if (filterByCompany) {
+      matchingCompanyIds = matchingCompanyIds.filter((id) => ids.some((companyId) => String(companyId) === String(id)));
+    } else {
+      matchingCompanyIds = ids;
+      filterByCompany = true;
+    }
+  }
+
+  if (filterByCompany) {
+    filter.companyId = { $in: matchingCompanyIds };
+  }
+
+  // Handle full-text search by title, description, tags, skills, company name, industry
+  if (query.search) {
+    const companiesMatchingSearch = await Company.find({
+      $or: [
+        { companyName: { $regex: query.search, $options: 'i' } },
+        { industry: { $regex: query.search, $options: 'i' } }
+      ]
+    }).select('_id').lean();
+    const searchCompanyIds = companiesMatchingSearch.map((c) => c._id);
+
+    filter.$or = [
+      { title: { $regex: query.search, $options: 'i' } },
+      { description: { $regex: query.search, $options: 'i' } },
+      { tags: { $regex: query.search, $options: 'i' } },
+      { techStack: { $regex: query.search, $options: 'i' } },
+      ...(searchCompanyIds.length > 0 ? [{ companyId: { $in: searchCompanyIds } }] : [])
+    ];
+  }
+
   return filter;
 }
 
@@ -121,12 +172,13 @@ export async function getChallenges(req: Request, res: Response): Promise<void> 
       res.status(200).json(JSON.parse(cached) as Record<string, unknown>);
       return;
     }
-    const filter = buildChallengeFilter(query);
+    const filter = await buildChallengeFilter(query);
     const sortMap: Record<string, Record<string, 1 | -1>> = {
       newest: { createdAt: -1 },
       prize: { 'prizes.total': -1 },
       deadline: { deadline: 1 },
-      popularity: { views: -1 }
+      popularity: { views: -1 },
+      participants: { currentParticipants: -1 }
     };
     const page = query.page ?? 1;
     const limit = query.limit ?? 12;

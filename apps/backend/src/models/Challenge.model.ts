@@ -29,6 +29,8 @@ const challengeSchema = new Schema<any>(
     requirements: { type: [String], default: [] },
     maxParticipants: { type: Number, default: 0 },
     currentParticipants: { type: Number, default: 0 },
+    maxTeamSize: { type: Number, default: 5 },
+    industry: { type: String, default: 'Other', index: true },
     submissionsCount: { type: Number, default: 0, index: true },
     views: { type: Number, default: 0 },
     isRemote: { type: Boolean, default: true },

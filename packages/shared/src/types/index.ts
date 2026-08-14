@@ -131,6 +131,8 @@ export interface IChallenge {
   views: number;
   isRemote: boolean;
   attachments: string[];
+  maxTeamSize?: number;
+  industry?: string;
   aiSummary?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -220,6 +222,7 @@ export interface ITeam {
   inviteCode: string;
   maxMembers: number;
   status: TeamStatus;
+  logo?: string;
   submissionId?: string;
   createdAt: Date;
   updatedAt: Date;
