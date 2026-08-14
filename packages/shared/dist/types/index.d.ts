@@ -8,7 +8,7 @@ export type MessageType = 'text' | 'file' | 'image' | 'system';
 export type TeamStatus = 'draft' | 'active' | 'locked' | 'disbanded';
 export type CertificateType = 'winner' | 'participant' | 'finalist';
 export type PaymentType = 'subscription' | 'prize' | 'withdrawal';
-export type PaymentStatus = 'pending' | 'success' | 'failed' | 'refunded';
+export type PaymentStatus = 'pending' | 'success' | 'failed' | 'refunded' | 'funded' | 'held' | 'released';
 export type PaymentGateway = 'razorpay' | 'stripe';
 export type CompanyVerificationStatus = 'pending' | 'verified' | 'rejected';
 export type CompanySize = 'startup' | 'small' | 'medium' | 'large' | 'enterprise';
@@ -49,11 +49,6 @@ export interface IUser {
     passwordHash: string;
     role: UserRole;
     avatar?: string;
-    bio?: string;
-    skills: string[];
-    github?: string;
-    linkedin?: string;
-    portfolioUrl?: string;
     innovationScore: number;
     isVerified: boolean;
     isActive: boolean;
@@ -62,10 +57,21 @@ export interface IUser {
     createdAt: Date;
     updatedAt: Date;
 }
+export interface IInnovatorProfile {
+    _id: string;
+    userId: string;
+    bio?: string;
+    skills: string[];
+    portfolioLinks: string[];
+    totalWins: number;
+    createdAt: Date;
+    updatedAt: Date;
+}
 export interface ICompany {
     _id: string;
     userId: string;
     companyName: string;
+    slug?: string;
     logo?: string;
     description?: string;
     industry?: string;
@@ -90,7 +96,10 @@ export interface IChallengePrizes {
 }
 export interface IChallenge {
     _id: string;
+    slug: string;
     companyId: string;
+    company?: ICompany;
+    submissionsCount?: number;
     title: string;
     description: string;
     problemStatement: string;
@@ -108,6 +117,8 @@ export interface IChallenge {
     views: number;
     isRemote: boolean;
     attachments: string[];
+    maxTeamSize?: number;
+    industry?: string;
     aiSummary?: string;
     createdAt: Date;
     updatedAt: Date;
@@ -190,6 +201,7 @@ export interface ITeam {
     inviteCode: string;
     maxMembers: number;
     status: TeamStatus;
+    logo?: string;
     submissionId?: string;
     createdAt: Date;
     updatedAt: Date;

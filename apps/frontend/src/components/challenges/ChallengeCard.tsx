@@ -179,7 +179,7 @@ export function ChallengeCard({ challenge }: ChallengeCardProps): JSX.Element {
             ))}
           </div>
           <Button asChild className="shrink-0">
-            <Link href={`/challenges/${challenge._id}`}>View</Link>
+            <Link href={`/challenges/${challenge.slug}`}>View</Link>
           </Button>
         </div>
       </Card>

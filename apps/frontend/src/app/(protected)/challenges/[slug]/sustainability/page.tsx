@@ -1,12 +1,12 @@
 /*
- * Purpose: Specialised AI Sustainability Evaluation page.
+ * Purpose: Specialised AI Sustainability Evaluation page for slug challenge routes.
  * Author: Antigravity Pair Programmer
  * Date: 2026-08-14
  */
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../../../services/api';
@@ -25,7 +25,7 @@ import {
 import { Button } from '../../../../../components/ui/Button';
 
 export default function SustainabilityScoringPage(): JSX.Element {
-  const { id: challengeId } = useParams() as { id: string };
+  const { slug } = useParams() as { slug: string };
   const searchParams = useSearchParams();
   const submissionId = searchParams.get('submissionId');
   const router = useRouter();
@@ -40,9 +40,9 @@ export default function SustainabilityScoringPage(): JSX.Element {
 
   // Fetch challenge details
   const { data: challenge } = useQuery({
-    queryKey: ['challenge', challengeId],
+    queryKey: ['challenge', slug],
     queryFn: async () => {
-      const res = await api.get(`/api/challenges/${challengeId}`);
+      const res = await api.get(`/api/challenges/${slug}`);
       return res.data.data;
     }
   });
@@ -113,7 +113,7 @@ export default function SustainabilityScoringPage(): JSX.Element {
         </p>
       </div>
 
-      <div className="grid gap-8 grid-cols-1 lg:grid-cols-12 items-start">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
         {/* Form Inputs (Left) */}
         <div className="lg:col-span-7 space-y-6 bg-white/5 border border-white/5 rounded-3xl p-6 backdrop-blur">
           <h2 className="text-lg font-bold">Analysis Profile Parameters</h2>

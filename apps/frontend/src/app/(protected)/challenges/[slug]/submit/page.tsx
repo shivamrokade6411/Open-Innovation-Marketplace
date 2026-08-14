@@ -1,5 +1,5 @@
 /*
- * Purpose: Completed challenge submission wizard page with file uploads.
+ * Purpose: Completed challenge submission wizard page with slug resolution.
  * Author: Antigravity Pair Programmer
  * Date: 2026-08-14
  */
@@ -8,18 +8,20 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Mail, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Check, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '../../../../../components/ui/Button';
 import { Card } from '../../../../../components/ui/Card';
 import { api } from '../../../../../services/api';
+import toast from 'react-hot-toast';
 
 const storageKey = 'oim-submission-draft';
 
 export default function SubmissionPage(): JSX.Element {
   const router = useRouter();
-  const params = useParams();
+  const params = useParams() as { slug: string };
   
   const [step, setStep] = useState(0);
+  const [challengeDbId, setChallengeDbId] = useState<string | null>(null);
   const [draft, setDraft] = useState({ 
     title: '', 
     description: '', 
@@ -36,6 +38,21 @@ export default function SubmissionPage(): JSX.Element {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Load challenge MongoDB ID from slug
+  useEffect(() => {
+    async function loadChallenge() {
+      try {
+        const res = await api.get(`/api/challenges/${params.slug}`);
+        if (res.data.success) {
+          setChallengeDbId(res.data.data._id);
+        }
+      } catch (err) {
+        setError('Failed to resolve challenge identity.');
+      }
+    }
+    loadChallenge();
+  }, [params.slug]);
+
   useEffect(() => {
     const saved = window.localStorage.getItem(storageKey);
     if (saved) {
@@ -48,6 +65,10 @@ export default function SubmissionPage(): JSX.Element {
   }, [draft]);
 
   const handleSubmit = async () => {
+    if (!challengeDbId) {
+      setError('Challenge identity is not fully loaded.');
+      return;
+    }
     if (!draft.title.trim() || !draft.description.trim()) {
       setError('Title and description are required.');
       setStep(0);
@@ -59,7 +80,7 @@ export default function SubmissionPage(): JSX.Element {
 
     try {
       const formData = new FormData();
-      formData.append('challengeId', String(params.id));
+      formData.append('challengeId', challengeDbId);
       formData.append('title', draft.title);
       formData.append('description', draft.description);
       
@@ -87,6 +108,7 @@ export default function SubmissionPage(): JSX.Element {
 
       if (res.data.success) {
         window.localStorage.removeItem(storageKey);
+        toast.success('Solution submitted successfully!');
         router.push('/dashboard');
       } else {
         setError(res.data.message ?? 'Submission failed.');
@@ -201,16 +223,7 @@ export default function SubmissionPage(): JSX.Element {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">External Video URL (YouTube/Vimeo)</label>
-              <input 
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-purple-500/50 text-white placeholder-slate-500" 
-                placeholder="https://..." 
-                value={draft.videoUrl} 
-                onChange={(event) => setDraft({ ...draft, videoUrl: event.target.value })} 
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Live Demo URL</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Deployed Demo URL</label>
               <input 
                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-purple-500/50 text-white placeholder-slate-500" 
                 placeholder="https://..." 
@@ -222,50 +235,49 @@ export default function SubmissionPage(): JSX.Element {
         )}
 
         {step === 3 && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold tracking-tight">Review & AI Evaluation Preview</h2>
-            <div className="rounded-2xl bg-purple-500/10 border border-purple-500/20 p-6 text-sm leading-relaxed text-purple-200">
-              <p className="font-bold flex items-center gap-2 mb-2">
-                <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
-                AI Grading Engine Ready
-              </p>
-              Once you submit this challenge, our automated AI grading model will review your code parameters, score code quality and innovation metrics, and check for code uniqueness. Review scores will be available on your dashboard within minutes.
-            </div>
-
-            <div className="space-y-4 border-t border-white/5 pt-6 text-sm text-slate-400">
-              <div>
-                <span className="font-bold text-white block">Project Title</span>
-                <span className="mt-1 block">{draft.title || 'Untitled'}</span>
-              </div>
-              <div>
-                <span className="font-bold text-white block">Tech Stack</span>
-                <span className="mt-1 block">{draft.techStack || 'None'}</span>
-              </div>
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold tracking-tight">Review Solution</h2>
+            <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 space-y-4 text-sm font-light">
+              <p><strong className="font-semibold">Project Title:</strong> {draft.title}</p>
+              <p className="line-clamp-3"><strong className="font-semibold">Description:</strong> {draft.description}</p>
+              <p><strong className="font-semibold">Tech Stack:</strong> {draft.techStack}</p>
+              <p><strong className="font-semibold">GitHub Repo:</strong> {draft.githubUrl || 'N/A'}</p>
+              <p><strong className="font-semibold">Live URL:</strong> {draft.solutionUrl || 'N/A'}</p>
+              <p><strong className="font-semibold">Uploaded PDF:</strong> {pdfFile ? pdfFile.name : 'N/A'}</p>
+              <p><strong className="font-semibold">Uploaded Video:</strong> {videoFile ? videoFile.name : 'N/A'}</p>
+              <p><strong className="font-semibold">Uploaded Source (.zip):</strong> {zipFile ? zipFile.name : 'N/A'}</p>
             </div>
           </div>
         )}
 
-        <div className="mt-8 flex justify-between gap-3 border-t border-white/5 pt-6">
+        <div className="mt-8 flex items-center justify-between gap-4 border-t border-white/5 pt-6">
           <Button
+            type="button"
             variant="secondary"
+            disabled={submitting}
             onClick={() => {
               if (step === 0) {
-                router.push(`/challenges/${params.id}`);
+                router.back();
               } else {
                 setStep((current) => current - 1);
               }
             }}
-            disabled={submitting}
           >
             Back
           </Button>
 
           {step === 3 ? (
-            <Button onClick={handleSubmit} loading={submitting} className="bg-purple-600 hover:bg-purple-500 font-bold uppercase text-xs tracking-wider">
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={submitting || !challengeDbId}
+              className="flex items-center gap-1.5 bg-brand-primary hover:bg-brand-primary/95 text-white"
+            >
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Submit Solution
             </Button>
           ) : (
-            <Button onClick={() => setStep((current) => Math.min(3, current + 1))}>
+            <Button type="button" onClick={() => setStep((current) => current + 1)}>
               Continue
             </Button>
           )}

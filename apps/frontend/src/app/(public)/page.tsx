@@ -43,7 +43,7 @@ const highlights = [
 ];
 
 export default async function HomePage(): Promise<JSX.Element> {
-  let latestChallengeId = '';
+  let latestChallengeSlug = '';
   let dynamicStats = { totalUsers: 0, totalCompanies: 0, totalChallenges: 0, totalSubmissions: 0 };
   
   try {
@@ -64,7 +64,7 @@ export default async function HomePage(): Promise<JSX.Element> {
       const challengesJson = await challengesRes.json();
       if (challengesJson.success && Array.isArray(challengesJson.data) && challengesJson.data.length > 0) {
         const firstChallenge = challengesJson.data[0];
-        latestChallengeId = firstChallenge._id;
+        latestChallengeSlug = firstChallenge.slug;
       }
     }
   } catch (err) {
@@ -92,7 +92,7 @@ export default async function HomePage(): Promise<JSX.Element> {
         <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 flex flex-col items-center text-center max-w-4xl mx-auto">
           {/* Announcement badge */}
           <Link
-            href={latestChallengeId ? `/challenges/${latestChallengeId}` : '/challenges'}
+            href={latestChallengeSlug ? `/challenges/${latestChallengeSlug}` : '/challenges'}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-purple-500/35 transition duration-300 text-xs md:text-sm text-slate-300 mb-8 cursor-pointer shadow-inner backdrop-blur-sm hover:scale-[1.02] active:scale-[0.98]"
           >
             <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />

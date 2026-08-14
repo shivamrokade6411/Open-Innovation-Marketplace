@@ -111,6 +111,7 @@ export interface IChallengePrizes {
 
 export interface IChallenge {
   _id: string;
+  slug: string;
   companyId: string;
   company?: ICompany;
   submissionsCount?: number;
