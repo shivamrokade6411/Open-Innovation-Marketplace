@@ -40,7 +40,7 @@ export default function LoginPage(): JSX.Element {
       if (loginThunk.fulfilled.match(action)) {
         dispatch(setCredentials(action.payload));
         const role = action.payload.user.role;
-        router.push(role === 'admin' ? '/admin/dashboard' : role === 'company' ? '/company/dashboard' : '/dashboard');
+        router.push(role === 'admin' ? '/admin' : role === 'company' ? '/company/dashboard' : '/dashboard');
       }
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Login failed');

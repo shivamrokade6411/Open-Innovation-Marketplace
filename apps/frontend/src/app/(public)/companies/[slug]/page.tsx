@@ -1,22 +1,29 @@
 /*
- * Purpose: Company Profile Detail page.
- * Author: Antigravity
- * Date: 2026-08-02
+ * Purpose: Company Profile Detail page with challenges, stats, and winners.
+ * Author: Antigravity Pair Programmer
+ * Date: 2026-08-14
  */
 
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { 
-  Building2, 
-  MapPin, 
-  Globe, 
-  Star, 
-  CheckCircle2, 
-  ArrowLeft, 
+import {
+  Building2,
+  MapPin,
+  Globe,
+  Star,
+  CheckCircle2,
+  ArrowLeft,
   ArrowUpRight,
   Calendar,
-  DollarSign
+  DollarSign,
+  TrendingUp,
+  Award,
+  Users,
+  Eye,
+  Percent
 } from 'lucide-react';
+import { Button } from '../../../../components/ui/Button';
+import { Card } from '../../../../components/ui/Card';
 
 const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -62,8 +69,6 @@ const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
   </svg>
 );
-import { Button } from '../../../../components/ui/Button';
-import { Card } from '../../../../components/ui/Card';
 
 interface PageProps {
   params: {
@@ -78,6 +83,7 @@ interface CompanyDetailResponse {
       _id: string;
       companyName: string;
       logo?: string;
+      cover?: string;
       description?: string;
       industry?: string;
       website?: string;
@@ -96,25 +102,44 @@ interface CompanyDetailResponse {
       description: string;
       category: string;
       difficulty: string;
+      status: 'active' | 'completed' | 'draft';
       prizes: {
         total?: number;
       };
       deadline: string;
     }>;
+    winners: Array<{
+      _id: string;
+      userId: {
+        _id: string;
+        name: string;
+        avatar?: string;
+      };
+      challengeId: {
+        title: string;
+      };
+    }>;
+    stats: {
+      totalViews: number;
+      totalSubmissions: number;
+      activeCount: number;
+      completedCount: number;
+    };
   };
 }
 
-// Generate dynamic metadata for the page
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000';
   try {
     const res = await fetch(`${backendUrl}/api/companies/${params.slug}`);
     if (res.ok) {
-      const json = await res.json() as CompanyDetailResponse;
+      const json = (await res.json()) as CompanyDetailResponse;
       if (json.success && json.data.company) {
         return {
           title: `${json.data.company.companyName} - Company Profile`,
-          description: json.data.company.description || `View company profile and active challenges of ${json.data.company.companyName} on Open Innovation Marketplace.`
+          description:
+            json.data.company.description ||
+            `View company profile, active challenges, and previous winners of ${json.data.company.companyName} on Open Innovation Marketplace.`
         };
       }
     }
@@ -135,7 +160,7 @@ export default async function CompanyProfilePage({ params }: PageProps): Promise
   try {
     const res = await fetch(`${backendUrl}/api/companies/${params.slug}`, { cache: 'no-store' });
     if (res.ok) {
-      const json = await res.json() as CompanyDetailResponse;
+      const json = (await res.json()) as CompanyDetailResponse;
       if (json.success && json.data.company) {
         companyData = json.data;
       }
@@ -149,10 +174,10 @@ export default async function CompanyProfilePage({ params }: PageProps): Promise
 
   if (fetchError || !companyData) {
     return (
-      <main className="mx-auto max-w-xl px-4 py-24 text-center flex flex-col items-center justify-center min-h-[60vh]">
+      <main className="mx-auto max-w-xl px-4 py-24 text-center flex flex-col items-center justify-center min-h-[60vh] text-white">
         <Building2 className="h-16 w-16 text-slate-500 mb-4" />
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">Company Profile Not Found</h1>
-        <p className="mt-4 text-slate-600 dark:text-slate-400">
+        <h1 className="text-3xl font-extrabold">Company Profile Not Found</h1>
+        <p className="mt-4 text-slate-400">
           The company you are looking for does not exist or has been removed from our directories.
         </p>
         <Button asChild className="mt-8">
@@ -165,7 +190,10 @@ export default async function CompanyProfilePage({ params }: PageProps): Promise
     );
   }
 
-  const { company, challenges } = companyData;
+  const { company, challenges, winners = [], stats } = companyData;
+
+  const activeChallenges = challenges.filter((c) => c.status === 'active');
+  const completedChallenges = challenges.filter((c) => c.status === 'completed');
 
   const initials = company.companyName
     .split(' ')
@@ -175,251 +203,275 @@ export default async function CompanyProfilePage({ params }: PageProps): Promise
     .toUpperCase();
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 text-white space-y-8">
       {/* Back Button */}
-      <div className="mb-6">
-        <Link 
-          href="/companies" 
-          className="inline-flex items-center gap-x-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+      <div>
+        <Link
+          href="/companies"
+          className="inline-flex items-center gap-x-1.5 text-sm font-medium text-slate-450 hover:text-white transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Directory
         </Link>
       </div>
 
-      {/* Header Banner Section */}
-      <div className="relative rounded-3xl overflow-hidden border border-slate-200/60 dark:border-white/5 bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 p-8 sm:p-12 mb-8 shadow-xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.12),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(6,182,212,0.1),transparent_40%)]" />
-        
-        <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
-          {/* Company Logo / Avatar */}
+      {/* Cover and header block */}
+      <div className="relative rounded-3xl overflow-hidden border border-white/5 bg-slate-900 shadow-2xl">
+        {/* Cover Image or Gradient fallback */}
+        {company.cover ? (
+          <div className="h-48 w-full overflow-hidden">
+            <img src={company.cover} alt="Cover image" className="h-full w-full object-cover opacity-75" />
+          </div>
+        ) : (
+          <div className="h-48 w-full bg-gradient-to-r from-brand-primary/20 via-purple-950/20 to-slate-900" />
+        )}
+
+        {/* Profile details block */}
+        <div className="p-8 sm:p-10 -mt-16 relative flex flex-col sm:flex-row items-center sm:items-end gap-6">
+          {/* Company Logo */}
           {company.logo ? (
             <img
               src={company.logo}
               alt={`${company.companyName} logo`}
-              className="h-24 w-24 rounded-2xl object-cover border-2 border-indigo-500/20 shadow-lg shadow-indigo-500/10"
+              className="h-28 w-28 rounded-2xl object-cover border-4 border-slate-900 shadow-xl"
             />
           ) : (
-            <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/25 to-cyan-500/25 text-3xl font-black text-indigo-400 dark:text-cyan-400 border border-indigo-500/20 shadow-lg">
+            <div className="flex h-28 w-28 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/25 to-cyan-500/25 text-4xl font-black text-indigo-400 border-4 border-slate-900 shadow-xl">
               {initials}
             </div>
           )}
 
-          {/* Info Header */}
-          <div className="flex-1 text-center md:text-left space-y-3">
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-              <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                {company.companyName}
-              </h1>
+          {/* Info details */}
+          <div className="flex-1 text-center sm:text-left space-y-2 pb-2">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+              <h1 className="text-3xl font-black tracking-tight text-white">{company.companyName}</h1>
               {company.verificationStatus === 'verified' && (
-                <span className="inline-flex items-center gap-x-1 rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-xs font-semibold text-cyan-400 border border-cyan-500/20">
+                <span className="inline-flex items-center gap-x-1 rounded-full bg-brand-primary/20 px-2.5 py-0.5 text-xs font-semibold text-brand-primary border border-brand-primary/30">
                   <CheckCircle2 className="h-3 w-3" />
                   Verified Partner
                 </span>
               )}
             </div>
 
-            {/* Quick Badges Row */}
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-y-2 gap-x-4 text-sm text-slate-350 dark:text-slate-400">
-              <span className="inline-flex items-center gap-x-1.5 capitalize">
-                <Building2 className="h-4 w-4 text-indigo-400" />
-                {company.industry || 'General Industry'}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-sm text-white/60">
+              <span className="inline-flex items-center gap-1">
+                <Building2 className="h-4 w-4 text-brand-primary" /> {company.industry || 'Tech / Innovation'}
               </span>
-              <span className="hidden md:inline text-slate-650">•</span>
-              <span className="inline-flex items-center gap-x-1.5">
-                <MapPin className="h-4 w-4 text-indigo-400" />
-                {company.location || 'Remote'}
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-4 w-4 text-brand-primary" /> {company.location || 'Global / Remote'}
               </span>
-            </div>
-
-            {/* Rating */}
-            <div className="flex items-center justify-center md:justify-start gap-x-1">
-              {Array.from({ length: 5 }, (_, i) => {
-                const filled = i < Math.floor(company.rating);
-                return (
-                  <Star 
-                    key={i} 
-                    className={`h-4 w-4 ${filled ? 'fill-amber-400 text-amber-400' : 'text-slate-600'}`} 
-                  />
-                );
-              })}
-              <span className="ml-2 text-sm font-semibold text-white">{company.rating.toFixed(1)} / 5.0</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Page Layout Grid */}
+      {/* Main content split grid */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Left Columns - Details & Active Challenges */}
+        {/* Left Side: About & Challenges */}
         <div className="lg:col-span-2 space-y-8">
-          {/* About Card */}
-          <Card variant="glass" className="border-indigo-500/10">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">About</h2>
-            <p className="text-base leading-7 text-slate-650 dark:text-slate-300">
+          {/* About Section */}
+          <div className="rounded-2xl border border-white/5 bg-white/5 p-6 backdrop-blur space-y-3">
+            <h2 className="text-xl font-bold">About</h2>
+            <p className="text-white/70 text-sm leading-relaxed whitespace-pre-line">
               {company.description || 'No description provided by the company.'}
             </p>
-          </Card>
+          </div>
 
-          {/* Active Challenges Card */}
-          <Card variant="glass" className="border-indigo-500/10">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
-              Active Challenges ({challenges.length})
+          {/* Active Challenges tab section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-brand-primary" /> Active Challenges ({activeChallenges.length})
             </h2>
-            
-            {challenges.length > 0 ? (
+
+            {activeChallenges.length > 0 ? (
               <div className="grid gap-4">
-                {challenges.map((challenge) => {
-                  const deadlineDate = new Date(challenge.deadline);
-                  const isExpired = deadlineDate.getTime() < Date.now();
-                  return (
-                    <div 
-                      key={challenge._id} 
-                      className="group/item flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 rounded-2xl border border-slate-200/50 bg-white/40 dark:border-white/5 dark:bg-slate-950/20 hover:border-indigo-500/30 transition-all duration-200"
-                    >
-                      <div className="space-y-1.5 max-w-lg">
-                        <div className="flex items-center gap-x-2.5">
-                          <span className="inline-flex items-center rounded-md bg-indigo-500/10 px-2 py-0.5 text-xs font-semibold text-indigo-400 border border-indigo-500/20 capitalize">
-                            {challenge.category}
-                          </span>
-                          <span className="text-xs text-slate-400 capitalize">
-                            {challenge.difficulty}
-                          </span>
-                        </div>
-                        <h3 className="text-base font-semibold text-slate-900 dark:text-white group-hover/item:text-indigo-400 dark:group-hover/item:text-cyan-400 transition-colors">
-                          {challenge.title}
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-                          {challenge.description}
-                        </p>
-                      </div>
-
-                      <div className="mt-4 sm:mt-0 flex items-center justify-between w-full sm:w-auto gap-x-6 border-t border-slate-100 sm:border-0 pt-4 sm:pt-0">
-                        {/* Prize Pool */}
-                        {challenge.prizes.total && (
-                          <div className="text-right hidden sm:block">
-                            <span className="block text-[10px] uppercase tracking-wider text-slate-500">Prize Pool</span>
-                            <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-x-0.5">
-                              <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
-                              {challenge.prizes.total.toLocaleString()}
-                            </span>
-                          </div>
-                        )}
-
-                        <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
-                          <Link href={`/challenges/${challenge._id}`} className="flex items-center gap-x-1.5">
-                            View Challenge
-                            <ArrowUpRight className="h-3.5 w-3.5" />
-                          </Link>
-                        </Button>
-                      </div>
+                {activeChallenges.map((challenge) => (
+                  <div
+                    key={challenge._id}
+                    className="p-5 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition"
+                  >
+                    <div>
+                      <span className="bg-brand-primary/20 text-brand-primary text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                        {challenge.category}
+                      </span>
+                      <h3 className="font-bold text-base text-white mt-2">{challenge.title}</h3>
+                      <p className="text-xs text-white/50 line-clamp-1 mt-1">{challenge.description}</p>
                     </div>
-                  );
-                })}
+                    <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-2 w-full sm:w-auto justify-between border-t border-white/5 sm:border-0 pt-3 sm:pt-0">
+                      {challenge.prizes.total && (
+                        <span className="text-emerald-400 font-black text-sm flex items-center">
+                          <DollarSign className="h-3.5 w-3.5" /> {challenge.prizes.total.toLocaleString()}
+                        </span>
+                      )}
+                      <Link
+                        href={`/challenges/${challenge._id}`}
+                        className="rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 px-4 py-2 text-xs font-semibold flex items-center gap-1"
+                      >
+                        View Challenge <ArrowUpRight className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="text-center py-12 bg-slate-50/10 dark:bg-slate-950/10 border border-dashed border-slate-200 dark:border-white/5 rounded-2xl">
-                <Building2 className="h-10 w-10 text-slate-500 mx-auto mb-3" />
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-white">No active challenges</h4>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  This company has no challenges accepting submissions right now.
-                </p>
-              </div>
+              <p className="text-sm text-white/40 italic py-2">No active challenges acceptor.</p>
             )}
-          </Card>
+          </div>
+
+          {/* Completed Challenges section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Award className="h-5 w-5 text-brand-primary" /> Completed Challenges ({completedChallenges.length})
+            </h2>
+
+            {completedChallenges.length > 0 ? (
+              <div className="grid gap-4">
+                {completedChallenges.map((challenge) => (
+                  <div
+                    key={challenge._id}
+                    className="p-5 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition opacity-80"
+                  >
+                    <div>
+                      <span className="bg-white/10 text-white/60 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                        Closed
+                      </span>
+                      <h3 className="font-bold text-base text-white/90 mt-2">{challenge.title}</h3>
+                      <p className="text-xs text-white/40 line-clamp-1 mt-1">{challenge.description}</p>
+                    </div>
+                    <Link
+                      href={`/challenges/${challenge._id}`}
+                      className="rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 px-4 py-2 text-xs font-semibold flex items-center gap-1 shrink-0"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-white/40 italic py-2">No past completed challenges.</p>
+            )}
+          </div>
         </div>
 
-        {/* Right Sidebar Column - Resource Links & Analytics */}
+        {/* Right Side: Resources, Stats, and Winners */}
         <div className="space-y-8">
-          {/* Quick Info & Resource Links */}
-          <Card variant="glass" className="border-indigo-500/10">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Resources</h3>
-            
-            <div className="space-y-3.5">
+          {/* Resources */}
+          <div className="rounded-2xl border border-white/5 bg-white/5 p-6 backdrop-blur space-y-4">
+            <h3 className="font-bold text-sm uppercase tracking-wider text-white/50">Resources</h3>
+            <div className="space-y-3">
               {company.website ? (
                 <a
                   href={company.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:border-indigo-500/30 text-slate-700 hover:text-indigo-500 dark:border-white/5 dark:bg-slate-950/40 dark:text-slate-300 dark:hover:text-cyan-400 transition-all text-sm"
+                  className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-slate-900/60 hover:bg-slate-900 hover:border-brand-primary/30 transition text-xs font-semibold"
                 >
-                  <span className="flex items-center gap-x-2 font-medium">
-                    <Globe className="h-4 w-4" />
-                    Official Website
+                  <span className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-brand-primary" /> Official Website
                   </span>
-                  <ArrowUpRight className="h-3.5 w-3.5" />
+                  <ArrowUpRight className="h-3.5 w-3.5 text-white/40" />
                 </a>
               ) : (
-                <div className="flex items-center gap-x-2 p-3 text-sm text-slate-400 italic">
-                  <Globe className="h-4 w-4" />
-                  Website not provided
-                </div>
+                <p className="text-xs text-white/40 italic">Website not registered.</p>
               )}
 
-              {/* Social Links Row */}
-              <div className="flex items-center gap-x-2 pt-2">
-                {company.socialLinks.twitter && (
+              {/* Social profiles row */}
+              <div className="flex gap-2">
+                {company.socialLinks?.twitter && (
                   <a
                     href={company.socialLinks.twitter}
                     target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-650 hover:text-indigo-500 dark:border-white/5 dark:bg-slate-950/40 dark:text-slate-400 dark:hover:text-cyan-400 transition-all"
-                    aria-label="Twitter Profile"
+                    rel="noreferrer"
+                    className="h-10 w-10 border border-white/5 bg-slate-900/60 hover:border-brand-primary/30 flex items-center justify-center rounded-xl transition"
                   >
                     <TwitterIcon className="h-4 w-4" />
                   </a>
                 )}
-                {company.socialLinks.linkedin && (
+                {company.socialLinks?.linkedin && (
                   <a
                     href={company.socialLinks.linkedin}
                     target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-650 hover:text-indigo-500 dark:border-white/5 dark:bg-slate-950/40 dark:text-slate-400 dark:hover:text-cyan-400 transition-all"
-                    aria-label="LinkedIn Profile"
+                    rel="noreferrer"
+                    className="h-10 w-10 border border-white/5 bg-slate-900/60 hover:border-brand-primary/30 flex items-center justify-center rounded-xl transition"
                   >
                     <LinkedinIcon className="h-4 w-4" />
                   </a>
                 )}
-                {company.socialLinks.github && (
+                {company.socialLinks?.github && (
                   <a
                     href={company.socialLinks.github}
                     target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-650 hover:text-indigo-500 dark:border-white/5 dark:bg-slate-950/40 dark:text-slate-400 dark:hover:text-cyan-400 transition-all"
-                    aria-label="GitHub Profile"
+                    rel="noreferrer"
+                    className="h-10 w-10 border border-white/5 bg-slate-900/60 hover:border-brand-primary/30 flex items-center justify-center rounded-xl transition"
                   >
                     <GithubIcon className="h-4 w-4" />
                   </a>
                 )}
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Quick Stats Card */}
-          <Card variant="glass" className="border-indigo-500/10">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Stats</h3>
+          {/* Past Statistics */}
+          <div className="rounded-2xl border border-white/5 bg-white/5 p-6 backdrop-blur space-y-4">
+            <h3 className="font-bold text-sm uppercase tracking-wider text-white/50">Past Statistics</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100 dark:bg-slate-950/20 dark:border-white/5">
-                <span className="block text-[10px] uppercase font-bold text-slate-500">Challenges</span>
-                <span className="mt-1 block text-xl font-bold text-slate-900 dark:text-white">
-                  {company.totalChallenges}
-                </span>
+              <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center">
+                <Users className="h-5 w-5 text-brand-primary mx-auto mb-2" />
+                <span className="block text-[10px] text-white/40 uppercase tracking-wider font-bold">Submissions</span>
+                <span className="text-lg font-black">{stats.totalSubmissions}</span>
               </div>
-              <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100 dark:bg-slate-950/20 dark:border-white/5">
-                <span className="block text-[10px] uppercase font-bold text-slate-500">Hires / Placements</span>
-                <span className="mt-1 block text-xl font-bold text-slate-900 dark:text-white">
-                  {company.totalHires}
-                </span>
+              <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center">
+                <Eye className="h-5 w-5 text-brand-primary mx-auto mb-2" />
+                <span className="block text-[10px] text-white/40 uppercase tracking-wider font-bold">Views</span>
+                <span className="text-lg font-black">{stats.totalViews}</span>
               </div>
-              <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100 dark:bg-slate-950/20 dark:border-white/5 col-span-2">
-                <span className="block text-[10px] uppercase font-bold text-slate-500">Organization Size</span>
-                <span className="mt-1 block text-sm font-semibold text-slate-900 dark:text-white capitalize">
-                  {company.size || 'Unspecified'}
+              <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center">
+                <Award className="h-5 w-5 text-brand-primary mx-auto mb-2" />
+                <span className="block text-[10px] text-white/40 uppercase tracking-wider font-bold">Closed Tasks</span>
+                <span className="text-lg font-black">{stats.completedCount}</span>
+              </div>
+              <div className="bg-slate-900 p-4 rounded-xl border border-white/5 text-center">
+                <Percent className="h-5 w-5 text-brand-primary mx-auto mb-2" />
+                <span className="block text-[10px] text-white/40 uppercase tracking-wider font-bold">Conversion</span>
+                <span className="text-lg font-black">
+                  {stats.totalViews > 0
+                    ? Math.round((stats.totalSubmissions / stats.totalViews) * 100)
+                    : 0}
+                  %
                 </span>
               </div>
             </div>
-          </Card>
+          </div>
+
+          {/* Winners Showcase */}
+          <div className="rounded-2xl border border-white/5 bg-white/5 p-6 backdrop-blur space-y-4">
+            <h3 className="font-bold text-sm uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+              <Award className="h-4 w-4 text-amber-400" /> Challenge Winners
+            </h3>
+            <div className="space-y-4">
+              {winners.map((win) => (
+                <div key={win._id} className="flex gap-3 text-xs items-center">
+                  {win.userId?.avatar ? (
+                    <img src={win.userId.avatar} alt="Winner avatar" className="h-8 w-8 rounded-full border border-white/10 object-cover" />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-brand-primary/20 text-brand-primary flex items-center justify-center shrink-0 font-bold uppercase">
+                      {win.userId?.name?.charAt(0) || 'W'}
+                    </div>
+                  )}
+                  <div>
+                    <h4 className="font-bold text-white">{win.userId?.name || 'Anonymous Solver'}</h4>
+                    <p className="text-[10px] text-white/50 truncate max-w-[180px]">
+                      Won: {win.challengeId?.title}
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+              {winners.length === 0 && (
+                <p className="text-xs text-white/40 text-center py-2">No winners announced yet.</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </main>

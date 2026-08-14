@@ -5,6 +5,7 @@
  */
 
 import type { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { User } from '../models/User.model';
 import { Company } from '../models/Company.model';
 import { Challenge } from '../models/Challenge.model';
@@ -91,24 +92,70 @@ export async function getInnovatorStats(req: Request, res: Response): Promise<vo
 export async function getLeaderboard(req: Request, res: Response): Promise<void> {
   const page = Number(req.query.page ?? 1);
   const limit = Number(req.query.limit ?? 20);
-  const users = await User.find({ role: 'innovator' }).sort({ innovationScore: -1 }).skip((page - 1) * limit).limit(limit).lean();
-  
+  const category = String(req.query.category ?? 'contributors');
+
+  if (category === 'teams') {
+    const Team = mongoose.model('Team');
+    const teams = await Team.find().skip((page - 1) * limit).limit(limit).lean();
+    const data = teams.map((team: any, index: number) => ({
+      rank: (page - 1) * limit + index + 1,
+      id: String(team._id),
+      name: team.name,
+      avatar: team.logo || '',
+      score: (team.members || []).length * 15,
+      wins: 0,
+      skills: []
+    }));
+    res.status(200).json({ success: true, message: 'Leaderboard loaded', data, meta: { page, limit, nextCursor: null } });
+    return;
+  }
+
+  let usersQuery = User.find({ role: 'innovator' });
+  let sortCriteria: any = { innovationScore: -1 };
+
+  if (category === 'wins') {
+    // Get profiles sorted by totalWins
+    const profiles = await InnovatorProfile.find().sort({ totalWins: -1 }).skip((page - 1) * limit).limit(limit).lean();
+    const userIds = profiles.map((p) => p.userId);
+    const users = await User.find({ _id: { $in: userIds } }).lean();
+    const userMap = new Map(users.map((u) => [String(u._id), u]));
+    const data = profiles.map((profile: any, index: number) => {
+      const user = userMap.get(String(profile.userId));
+      return {
+        rank: (page - 1) * limit + index + 1,
+        userId: String(profile.userId),
+        name: user?.name || 'Anonymous',
+        avatar: user?.avatar || '',
+        innovationScore: user?.innovationScore || 0,
+        wins: profile.totalWins || 0,
+        submissions: profile.totalWins * 2,
+        skills: profile.skills || []
+      };
+    });
+    res.status(200).json({ success: true, message: 'Leaderboard loaded', data, meta: { page, limit, nextCursor: null } });
+    return;
+  }
+
+  // Fallback / default categories sorting by innovationScore
+  const users = await User.find({ role: 'innovator' }).sort(sortCriteria).skip((page - 1) * limit).limit(limit).lean();
   const userIds = users.map((u) => u._id);
   const profiles = await InnovatorProfile.find({ userId: { $in: userIds } }).lean();
   const profileMap = new Map(profiles.map((p) => [String(p.userId), p]));
 
   const data = users.map((user, index) => {
     const profile = profileMap.get(String(user._id));
+    const wins = profile?.totalWins || 0;
     return {
       rank: (page - 1) * limit + index + 1,
       userId: String(user._id),
       name: user.name,
       avatar: user.avatar,
       innovationScore: user.innovationScore,
-      wins: profile?.totalWins || 0,
-      submissions: 0,
+      wins,
+      submissions: category === 'challenges' ? (user.innovationScore > 0 ? Math.ceil(user.innovationScore / 10) : 0) : wins * 2,
       skills: profile?.skills || []
     };
   });
+
   res.status(200).json({ success: true, message: 'Leaderboard loaded', data, meta: { page, limit, nextCursor: null } });
 }

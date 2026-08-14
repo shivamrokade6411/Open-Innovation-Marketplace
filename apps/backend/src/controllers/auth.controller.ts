@@ -6,6 +6,7 @@
 
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 import type { Request, Response } from 'express';
 import { User } from '../models/User.model';
 import { Company } from '../models/Company.model';
@@ -390,7 +391,18 @@ export async function getMe(req: Request, res: Response): Promise<void> {
  */
 export async function getUserProfileById(req: Request, res: Response): Promise<void> {
   try {
-    const user = await User.findById(req.params.id).lean();
+    const idOrUsername = req.params.id;
+    let user = null;
+    if (mongoose.Types.ObjectId.isValid(idOrUsername)) {
+      user = await User.findById(idOrUsername).lean();
+    }
+    if (!user) {
+      const targetName = idOrUsername.replace(/-/g, ' ');
+      user = await User.findOne({ name: { $regex: '^' + targetName + '$', $options: 'i' } }).lean();
+    }
+    if (!user) {
+      user = await User.findOne({ email: { $regex: '^' + idOrUsername + '@', $options: 'i' } }).lean();
+    }
     if (!user) {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }

@@ -13,7 +13,7 @@ const paymentSchema = new Schema<any>(
     type: { type: String, enum: ['subscription', 'prize', 'withdrawal'], required: true },
     amount: { type: Number, required: true },
     currency: { type: String, default: 'INR' },
-    status: { type: String, enum: ['pending', 'success', 'failed', 'refunded'], default: 'pending' },
+    status: { type: String, enum: ['pending', 'success', 'failed', 'refunded', 'funded', 'held', 'released'], default: 'pending' },
     gateway: { type: String, enum: ['razorpay', 'stripe'], required: true },
     gatewayOrderId: { type: String },
     gatewayPaymentId: { type: String },

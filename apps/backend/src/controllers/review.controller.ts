@@ -1,16 +1,12 @@
-/*
- * Purpose: Evaluation grading and shortlisting controller.
- * Author: Antigravity Pair Programmer
- * Date: 2026-08-14
- */
-
 import type { Request, Response } from 'express';
 import { Submission } from '../models/Submission.model';
 import { SubmissionReview } from '../models/SubmissionReview.model';
 import { SubmissionAuditLog } from '../models/SubmissionAuditLog.model';
+import { SustainabilityEvaluation } from '../models/SustainabilityEvaluation.model';
 import { Challenge } from '../models/Challenge.model';
 import { createNotification } from '../services/notification.service';
 import { AppError, forbidden, unauthorized } from '../middleware/errorHandler.middleware';
+import { sustainabilityScore } from '../lib/ai/sustainabilityScore';
 
 export async function submitReview(req: Request, res: Response): Promise<void> {
   if (!req.user || (req.user.role !== 'company' && req.user.role !== 'admin')) {
@@ -136,4 +132,41 @@ export async function getAuditTrailForSubmission(req: Request, res: Response): P
     .lean();
 
   res.status(200).json({ success: true, message: 'Audit trail loaded', data: auditLogs });
+}
+
+export async function evaluateSustainability(req: Request, res: Response): Promise<void> {
+  const { submissionId } = req.params;
+  const { projectDescription, technology, environmentalImpact, expectedUsers, resourceConsumption } = req.body;
+
+  if (!projectDescription || !technology || !environmentalImpact || !expectedUsers || !resourceConsumption) {
+    throw new AppError('All sustainability parameters are required', 400, 'BAD_REQUEST');
+  }
+
+  // Calculate AI Scorer
+  const aiResult = await sustainabilityScore(
+    projectDescription,
+    technology,
+    environmentalImpact,
+    expectedUsers,
+    resourceConsumption
+  );
+
+  const evaluation = await SustainabilityEvaluation.create({
+    submissionId,
+    projectDescription,
+    technology,
+    environmentalImpact,
+    expectedUsers,
+    resourceConsumption,
+    ...aiResult
+  });
+
+  res.status(200).json({ success: true, data: evaluation });
+}
+
+export async function getSustainability(req: Request, res: Response): Promise<void> {
+  const { submissionId } = req.params;
+  const evaluation = await SustainabilityEvaluation.findOne({ submissionId }).sort({ createdAt: -1 }).lean();
+
+  res.status(200).json({ success: true, data: evaluation });
 }

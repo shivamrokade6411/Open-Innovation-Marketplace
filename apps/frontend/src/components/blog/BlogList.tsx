@@ -1,29 +1,33 @@
 /*
- * Purpose: Component for rendering a premium grid list of blog posts.
+ * Purpose: Component for rendering a dynamic grid list of blog posts from CMS api.
  * Author: Antigravity Pair Programmer
- * Date: 2026-07-10
+ * Date: 2026-08-14
  */
+
+'use client';
 
 import Link from 'next/link';
 import { Card } from '../ui/Card';
 import { Calendar, Clock, ArrowRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../services/api';
 
 export interface BlogPost {
   slug: string;
   title: string;
   excerpt?: string;
-  date?: string;
+  publishedAt?: string;
   readTime?: string;
   category?: string;
   tags?: string[];
 }
 
-const posts: BlogPost[] = [
+const FALLBACK_POSTS: BlogPost[] = [
   {
     slug: 'innovation-marketplace-trends',
     title: 'Innovation Marketplace Trends in 2026',
     excerpt: 'Explore the shifting landscape of global developer ecosystems, open innovation challenges, and tokenized incentive models.',
-    date: 'July 4, 2026',
+    publishedAt: '2026-07-04T12:00:00Z',
     readTime: '3 min read',
     category: 'Ecosystem',
     tags: ['Decentralized', 'AI', 'Bounties']
@@ -32,7 +36,7 @@ const posts: BlogPost[] = [
     slug: 'how-to-win-open-source-bounties',
     title: 'How to Win Open Source Bounties: A Practical Guide',
     excerpt: 'Key strategies, collaboration tips, and technical preparation steps to win enterprise innovation challenges.',
-    date: 'July 8, 2026',
+    publishedAt: '2026-07-08T15:00:00Z',
     readTime: '5 min read',
     category: 'Guides',
     tags: ['Development', 'Career', 'Strategy']
@@ -41,7 +45,7 @@ const posts: BlogPost[] = [
     slug: 'ai-powered-code-evaluation',
     title: 'AI-Powered Code Evaluation: The Future of Grading',
     excerpt: 'An inside look at how static and dynamic analysis models are rating complex code submissions at scale.',
-    date: 'July 10, 2026',
+    publishedAt: '2026-07-10T10:00:00Z',
     readTime: '4 min read',
     category: 'Technology',
     tags: ['AI', 'Automation', 'Mongoose']
@@ -49,6 +53,17 @@ const posts: BlogPost[] = [
 ];
 
 export function BlogList(): JSX.Element {
+  // Query blog posts from backend api
+  const { data: serverPosts } = useQuery<BlogPost[]>({
+    queryKey: ['blog-posts'],
+    queryFn: async () => {
+      const res = await api.get('/api/blog');
+      return res.data.data;
+    }
+  });
+
+  const posts = serverPosts && serverPosts.length > 0 ? serverPosts : FALLBACK_POSTS;
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full">
       {posts.map((post) => (
@@ -61,11 +76,11 @@ export function BlogList(): JSX.Element {
             {/* Post Header Meta */}
             <div className="flex items-center justify-between mb-4">
               <span className="text-2xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-purple-600/10 text-purple-400 border border-purple-500/15">
-                {post.category}
+                {post.category || 'Ecosystem'}
               </span>
               <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs">
                 <Clock className="h-3.5 w-3.5 text-slate-500" />
-                <span>{post.readTime}</span>
+                <span>{post.readTime || '4 min read'}</span>
               </div>
             </div>
 
@@ -92,7 +107,7 @@ export function BlogList(): JSX.Element {
             <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                 <Calendar className="h-3.5 w-3.5" />
-                <span>{post.date}</span>
+                <span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : '7/10/2026'}</span>
               </div>
               <span className="inline-flex items-center text-xs font-semibold text-purple-400 group-hover:translate-x-1 transition-transform duration-200">
                 Read article <ArrowRight className="ml-1 h-3.5 w-3.5" />
