@@ -1,30 +1,43 @@
 'use client';
 
 import Link from 'next/link';
-import { Card } from '../../../../components/ui/Card';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 export default function CertificatesFeaturePage(): JSX.Element {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-4 py-12 md:px-8 lg:px-16">
-      <div className="mb-12">
-        <Link href="/" className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm mb-4">
+    <main className="min-h-screen bg-[#020d1f] text-white">
+      <header className="border-b border-[#1a2c45] bg-[#020d1f]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+          <Link href="/" className="text-4xl font-extrabold tracking-[-0.04em] text-transparent bg-gradient-to-r from-[#67d6ff] via-[#7d9af7] to-[#c17cff] bg-clip-text">
+            Open Innovation Marketplace
+          </Link>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl px-6 pb-16 pt-10 md:px-8 lg:px-10">
+        <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm text-slate-300 transition hover:text-white">
           <ArrowLeft className="h-4 w-4" /> Back to Home
         </Link>
-        <div className="max-w-4xl">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-green-600/20 border border-green-500/30">
-            <ShieldCheck className="h-4 w-4 text-green-400" />
-            <span className="text-xs font-semibold text-green-300 uppercase">Coming Soon</span>
+
+        <div className="max-w-5xl">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#1d9e66]/30 bg-[#1f5e44]/40 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[#5ee6ae]">
+            <span className="inline-flex h-2 w-2 rounded-full bg-[#5ee6ae]" />
+            Coming Soon
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+
+          <h1 className="max-w-5xl text-5xl font-black leading-[0.95] tracking-[-0.05em] text-[#5ee6ae] md:text-8xl">
             Verified Certificates & Rewards
           </h1>
-          <p className="mt-4 text-lg text-slate-400">Feature #4 - Cryptographic certificates and blockchain integration</p>
+
+          <p className="mt-5 text-lg text-slate-300 md:text-2xl">
+            Feature #4 - Cryptographic certificates and blockchain integration
+          </p>
+        </div>
+
+        <div className="mt-12 rounded-2xl border border-[#233756] bg-[#0f2138]/80 p-6 text-left text-lg text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+          This feature is being built. Check back soon!
         </div>
       </div>
-      <Card variant="glass">
-        <p className="text-slate-400">This feature is being built. Check back soon!</p>
-      </Card>
     </main>
   );
 }
