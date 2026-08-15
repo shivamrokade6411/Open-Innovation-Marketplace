@@ -18,7 +18,18 @@ const gradingResultSchema = new Schema<any>(
     strengths: { type: [String], default: [] },
     vulnerabilities: { type: [String], default: [] },
     recommendations: { type: [String], default: [] },
-    model: { type: String, default: 'claude-3-sonnet' },
+    plagiarismScore: { type: Number, default: 0 },
+    plagiarismMatches: {
+      type: [
+        {
+          source: { type: String, required: true },
+          similarity: { type: Number, min: 0, max: 100, required: true },
+          matchType: { type: String, default: 'external' } // 'internal' or 'external'
+        }
+      ],
+      default: []
+    },
+    model: { type: String, default: 'gpt-4o-mini' },
     processedAt: { type: Date, default: Date.now },
     processingTime: { type: Number } // in milliseconds
   },
