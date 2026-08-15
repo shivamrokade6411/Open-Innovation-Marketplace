@@ -45,11 +45,10 @@ const highlights = [
 export default async function HomePage(): Promise<JSX.Element> {
   let latestChallengeSlug = '';
   let dynamicStats = { totalUsers: 0, totalCompanies: 0, totalChallenges: 0, totalSubmissions: 0 };
-  
+
   try {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000';
-    
-    // Fetch stats
+
     const statsRes = await fetch(`${backendUrl}/api/platform-stats`, { next: { revalidate: 60 } });
     if (statsRes.ok) {
       const statsJson = await statsRes.json();
@@ -58,7 +57,6 @@ export default async function HomePage(): Promise<JSX.Element> {
       }
     }
 
-    // Fetch challenges to get the latest one
     const challengesRes = await fetch(`${backendUrl}/api/challenges`, { next: { revalidate: 60 } });
     if (challengesRes.ok) {
       const challengesJson = await challengesRes.json();
@@ -80,17 +78,13 @@ export default async function HomePage(): Promise<JSX.Element> {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white selection:bg-purple-500 selection:text-white overflow-hidden pb-24">
-      {/* Decorative Gradients */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] pointer-events-none opacity-40">
         <div className="absolute top-[-10%] left-[20%] w-[350px] h-[350px] rounded-full bg-purple-600/30 blur-[120px]" />
         <div className="absolute top-[20%] left-[50%] w-[400px] h-[400px] rounded-full bg-cyan-500/20 blur-[130px]" />
       </div>
 
       <main className="max-w-7xl mx-auto px-6 md:px-8">
-        
-        {/* HERO SECTION */}
         <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 flex flex-col items-center text-center max-w-4xl mx-auto">
-          {/* Announcement badge */}
           <Link
             href={latestChallengeSlug ? `/challenges/${latestChallengeSlug}` : '/challenges'}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-purple-500/35 transition duration-300 text-xs md:text-sm text-slate-300 mb-8 cursor-pointer shadow-inner backdrop-blur-sm hover:scale-[1.02] active:scale-[0.98]"
@@ -100,7 +94,6 @@ export default async function HomePage(): Promise<JSX.Element> {
             <ArrowRight className="h-3 w-3 text-cyan-400" />
           </Link>
 
-          {/* Large centered headline */}
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-white">
             Where Innovation <br />
             <span className="bg-gradient-to-r from-purple-500 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
@@ -108,12 +101,10 @@ export default async function HomePage(): Promise<JSX.Element> {
             </span>
           </h1>
 
-          {/* Subheading */}
           <p className="mt-8 text-lg md:text-xl text-slate-400 font-light max-w-2xl leading-relaxed">
             Discover global challenges, collaborate in real time with top talent, and transform prototypes into prizes, contracts, and careers.
           </p>
 
-          {/* CTA Buttons */}
           <div className="mt-10 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <Link
               href="/register"
@@ -131,12 +122,11 @@ export default async function HomePage(): Promise<JSX.Element> {
           </div>
         </section>
 
-        {/* STATS SECTION */}
         <section className="py-12 border-y border-white/5 bg-white/[0.01] rounded-3xl backdrop-blur-sm px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-white/5">
             {stats.map((entry, index) => (
-              <div 
-                key={entry.label} 
+              <div
+                key={entry.label}
                 className={`flex flex-col items-center text-center p-4 ${index > 1 ? 'pt-8 md:pt-4' : ''} ${index % 2 === 0 ? 'pr-2' : 'pl-2'}`}
               >
                 <div className={`p-2 rounded-xl bg-white/5 ${entry.color} mb-3`}>
@@ -149,7 +139,6 @@ export default async function HomePage(): Promise<JSX.Element> {
           </div>
         </section>
 
-        {/* FEATURES/HIGHLIGHTS SECTION */}
         <section className="mt-24">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">
@@ -174,10 +163,9 @@ export default async function HomePage(): Promise<JSX.Element> {
                         : '/features/certificates'
                 }
               >
-                <Card 
-                  key={item.title} 
-                  variant="glass" 
-                  hover 
+                <Card
+                  variant="glass"
+                  hover
                   className="flex flex-col h-full bg-[#121212] border-white/5 hover:border-purple-500/20 text-left transition-all duration-300 cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-6">
@@ -198,8 +186,8 @@ export default async function HomePage(): Promise<JSX.Element> {
             ))}
           </div>
         </section>
-
       </main>
     </div>
   );
 }
+

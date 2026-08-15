@@ -117,60 +117,105 @@ export default function RegisterPage(): JSX.Element {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-16">
-      <Card variant="glass" className="w-full max-w-2xl bg-white/70 dark:bg-slate-950/60">
+    <main className="flex min-h-screen items-center justify-center bg-[#020d1f] px-4 py-16">
+      <Card variant="glass" className="w-full max-w-[580px] border border-[#1d2a40] bg-[#061827]/85 px-5 py-5 shadow-[0_0_0_1px_rgba(96,165,250,0.08)] backdrop-blur-xl">
         <div className="mb-6">
-          <div className="mb-2 flex items-center justify-between text-sm text-slate-500">
+          <div className="mb-2 flex items-center justify-between text-sm text-slate-300">
             <span>Step {step + 1} of 4</span>
             <span>{Math.round(progress)}%</span>
           </div>
-          <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-800">
-            <div className="h-full rounded-full bg-gradient-to-r from-brand-primary to-brand-accent" style={{ width: `${progress}%` }} />
+          <div className="h-2 rounded-full bg-[#1a2c45]">
+            <div className="h-full rounded-full bg-gradient-to-r from-[#5aa9ff] to-[#8f6ddd]" style={{ width: `${progress}%` }} />
           </div>
         </div>
+
         <motion.div key={step} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
           {step === 0 && (
             <div>
-              <h1 className="text-3xl font-bold">Choose your role</h1>
-              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+              <h1 className="text-4xl font-bold tracking-tight text-white">Choose your role</h1>
+              <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
                 {(['innovator', 'company', 'admin'] as const).map((role) => (
-                  <button key={role} type="button" onClick={() => setValues((current) => ({ ...current, role }))} className={`rounded-2xl border p-4 text-left ${values.role === role ? 'border-brand-primary bg-brand-primary/10' : 'border-slate-200 dark:border-slate-800'}`}>
-                    <div className="font-semibold capitalize">{role}</div>
-                    <div className="text-sm text-slate-500">{role === 'innovator' ? 'Submit ideas' : role === 'company' ? 'Post challenges' : 'Manage the platform'}</div>
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setValues((current) => ({ ...current, role }))}
+                    className={`rounded-2xl border p-4 text-left transition ${values.role === role ? 'border-[#4d9ef9] bg-[#112d4b]' : 'border-[#1a2c45] bg-[#0b1d2d] text-slate-300 hover:border-[#2e4d76]'}`}
+                  >
+                    <div className="text-xl font-semibold capitalize text-white">{role}</div>
+                    <div className="mt-1 text-sm text-slate-300">
+                      {role === 'innovator' ? 'Submit ideas' : role === 'company' ? 'Post challenges' : 'Manage the platform'}
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
           )}
+
           {step === 1 && (
             <div className="grid gap-4 md:grid-cols-2">
-              <input className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900" placeholder="Full name" value={values.name} onChange={(event) => setValues((current) => ({ ...current, name: event.target.value }))} />
-              <input className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900" placeholder="Email" value={values.email} onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))} />
-              <input className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 md:col-span-2 dark:border-slate-800 dark:bg-slate-900" placeholder="Password" type="password" value={values.password} onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))} />
+              <input
+                className="rounded-xl border border-[#1a2c45] bg-[#0b1d2d] px-4 py-3 text-white outline-none placeholder:text-slate-400 focus:border-[#4d9ef9]"
+                placeholder="Full name"
+                value={values.name}
+                onChange={(event) => setValues((current) => ({ ...current, name: event.target.value }))}
+              />
+              <input
+                className="rounded-xl border border-[#1a2c45] bg-[#0b1d2d] px-4 py-3 text-white outline-none placeholder:text-slate-400 focus:border-[#4d9ef9]"
+                placeholder="Email"
+                value={values.email}
+                onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
+              />
+              <input
+                className="rounded-xl border border-[#1a2c45] bg-[#0b1d2d] px-4 py-3 text-white outline-none placeholder:text-slate-400 focus:border-[#4d9ef9] md:col-span-2"
+                placeholder="Password"
+                type="password"
+                value={values.password}
+                onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
+              />
             </div>
           )}
+
           {step === 2 && (
             <div className="grid gap-4 md:grid-cols-2">
-              <input className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900" placeholder="Company name (if applicable)" value={values.companyName} onChange={(event) => setValues((current) => ({ ...current, companyName: event.target.value }))} />
-              <input className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900" placeholder="Skills separated by commas" value={values.skills} onChange={(event) => setValues((current) => ({ ...current, skills: event.target.value }))} />
-              <textarea className="min-h-32 rounded-xl border border-slate-200 bg-white/80 px-4 py-3 md:col-span-2 dark:border-slate-800 dark:bg-slate-900" placeholder="Bio" value={values.bio} onChange={(event) => setValues((current) => ({ ...current, bio: event.target.value }))} />
+              <input
+                className="rounded-xl border border-[#1a2c45] bg-[#0b1d2d] px-4 py-3 text-white outline-none placeholder:text-slate-400 focus:border-[#4d9ef9]"
+                placeholder="Company name"
+                value={values.companyName}
+                onChange={(event) => setValues((current) => ({ ...current, companyName: event.target.value }))}
+              />
+              <input
+                className="rounded-xl border border-[#1a2c45] bg-[#0b1d2d] px-4 py-3 text-white outline-none placeholder:text-slate-400 focus:border-[#4d9ef9]"
+                placeholder="Skills"
+                value={values.skills}
+                onChange={(event) => setValues((current) => ({ ...current, skills: event.target.value }))}
+              />
+              <textarea
+                className="min-h-32 rounded-xl border border-[#1a2c45] bg-[#0b1d2d] px-4 py-3 text-white outline-none placeholder:text-slate-400 focus:border-[#4d9ef9] md:col-span-2"
+                placeholder="Bio"
+                value={values.bio}
+                onChange={(event) => setValues((current) => ({ ...current, bio: event.target.value }))}
+              />
             </div>
           )}
-          {step === 3 && <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-sm dark:border-slate-700">We will send a verification email after registration.</div>}
+
+          {step === 3 && <div className="rounded-2xl border border-dashed border-[#2a3a54] bg-[#0b1d2d] p-6 text-sm text-slate-300">We will send a verification email after registration.</div>}
+
           {error && (
-            <div className="flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400 dark:border-red-500/30 dark:bg-red-950/20">
-              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <div className="text-sm font-medium space-y-1">
+            <div className="flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-300">
+              <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+              <div className="space-y-1 text-sm font-medium">
                 {error.split('\n').map((err, i) => (
                   <div key={i}>{err}</div>
                 ))}
               </div>
             </div>
           )}
-          <div className="flex items-center justify-between gap-3">
+
+          <div className="flex items-center justify-between gap-3 pt-2">
             <Button
               type="button"
               variant="secondary"
+              className="rounded-xl bg-[#0b1d2d] text-white hover:bg-[#112d4b]"
               onClick={() => {
                 if (step === 0) {
                   router.push('/login');
@@ -181,7 +226,13 @@ export default function RegisterPage(): JSX.Element {
             >
               Back
             </Button>
-            <Button type="button" onClick={submitStep}>{step === 3 ? 'Create account' : 'Continue'}</Button>
+            <Button
+              type="button"
+              className="rounded-xl bg-gradient-to-r from-[#5e7bf9] via-[#6d80f9] to-[#a36de9] text-white shadow-[0_8px_24px_rgba(108,92,231,0.4)] hover:brightness-110"
+              onClick={submitStep}
+            >
+              {step === 3 ? 'Create account' : 'Continue'}
+            </Button>
           </div>
         </motion.div>
       </Card>
