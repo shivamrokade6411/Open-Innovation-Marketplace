@@ -131,7 +131,15 @@ const innovatorsData = [
   { name: 'Bob Smith', email: 'bob@innovate.dev', passwordHash: 'Innovator@123', skills: ['Python', 'TensorFlow', 'PyTorch', 'FastAPI'] },
   { name: 'Charlie Kim', email: 'charlie@innovate.dev', passwordHash: 'Innovator@123', skills: ['Solidity', 'Go', 'Rust', 'Web3.js'] },
   { name: 'David Lee', email: 'david@innovate.dev', passwordHash: 'Innovator@123', skills: ['Flutter', 'Swift', 'Kotlin', 'Firebase'] },
-  { name: 'Emma Watson', email: 'emma@innovate.dev', passwordHash: 'Innovator@123', skills: ['UI/UX', 'Figma', 'CSS', 'Tailwind'] }
+  { name: 'Emma Watson', email: 'emma@innovate.dev', passwordHash: 'Innovator@123', skills: ['UI/UX', 'Figma', 'CSS', 'Tailwind'] },
+  {
+    name: 'Shivam Rokade',
+    email: 'shivam@innovate.dev',
+    passwordHash: 'Innovator@123',
+    bio: 'Product-minded full-stack developer building SaaS experiences, AI-powered workflows, and user-centered digital products.',
+    skills: ['React', 'Next.js', 'TypeScript', 'Node.js', 'MongoDB', 'Tailwind CSS'],
+    portfolioLinks: ['https://github.com/shivamrokade6411']
+  }
 ];
 
 async function seed() {
@@ -207,9 +215,9 @@ async function seed() {
       });
       await InnovatorProfile.create({
         userId: user._id.toString(),
-        bio: `${inn.name} is a passionate innovator.`,
+        bio: inn.bio || `${inn.name} is a passionate innovator.`,
         skills: inn.skills,
-        portfolioLinks: [`https://github.com/${inn.name.toLowerCase().replace(' ', '')}`],
+        portfolioLinks: inn.portfolioLinks || [`https://github.com/${inn.name.toLowerCase().replace(' ', '')}`],
         totalWins: 0
       });
       seededInnovators.push(user);
