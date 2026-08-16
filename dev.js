@@ -6,19 +6,43 @@
  */
 
 const { spawn } = require('child_process');
+const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
+
+function killProcessByName(name) {
+  try {
+    const result = spawnSync('powershell', ['-NoProfile', '-Command', `Get-Process ${name} -ErrorAction SilentlyContinue | Stop-Process -Force`], {
+      stdio: 'inherit'
+    });
+    return result.status === 0 || result.status === null;
+  } catch (error) {
+    console.warn(`[System] Unable to stop ${name}:`, error.message);
+    return false;
+  }
+}
+
+function safeDelete(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) return;
+
+  try {
+    fs.rmSync(filePath, { force: true });
+  } catch (error) {
+    console.warn(`[System] Could not remove stale file ${filePath}:`, error.message);
+  }
+}
 
 function startProcess(name, command, args) {
   console.log(`[System] Starting ${name}...`);
-  const proc = spawn(command, args, { 
-    cwd: __dirname, 
-    shell: true,
+  const proc = spawn(command, args, {
+    cwd: __dirname,
+    shell: false,
     env: { ...process.env, FORCE_COLOR: 'true', NODE_OPTIONS: '--max-old-space-size=4096' }
   });
 
   proc.stdout.on('data', (data) => {
     const lines = data.toString().split('\n');
-    lines.forEach(line => {
+    lines.forEach((line) => {
       if (line.trim()) {
         console.log(`[\x1b[36m${name}\x1b[0m] ${line.trim()}`);
       }
@@ -27,7 +51,7 @@ function startProcess(name, command, args) {
 
   proc.stderr.on('data', (data) => {
     const lines = data.toString().split('\n');
-    lines.forEach(line => {
+    lines.forEach((line) => {
       if (line.trim()) {
         console.error(`[\x1b[31m${name} Error\x1b[0m] ${line.trim()}`);
       }
@@ -41,48 +65,58 @@ function startProcess(name, command, args) {
   return proc;
 }
 
-// Absolute paths to local database binaries
 const mongoBin = path.join(__dirname, '.local-db', 'mongodb', 'mongodb-win32-x86_64-windows-7.0.6', 'bin', 'mongod.exe');
 const mongoData = path.join(__dirname, '.local-db', 'mongodb-data');
 const redisBin = path.join(__dirname, '.local-db', 'redis', 'redis-server.exe');
 const postgresBin = 'C:\\Program Files\\PostgreSQL\\18\\bin\\postgres.exe';
 const postgresData = path.join(__dirname, '.local-db', 'postgres-data');
 
-// Double quotes for paths with spaces
-const mongoCmd = `"${mongoBin}"`;
-const redisCmd = `"${redisBin}"`;
-const postgresCmd = `"${postgresBin}"`;
+killProcessByName('mongod');
+killProcessByName('redis-server');
 
-// Delete postmaster.pid lock file if exists
-try {
-  const fs = require('fs');
-  const lockFile = path.join(postgresData, 'postmaster.pid');
-  if (fs.existsSync(lockFile)) {
-    fs.unlinkSync(lockFile);
-  }
-} catch (e) {}
+if (fs.existsSync(mongoData)) {
+  safeDelete(path.join(mongoData, 'mongod.lock'));
+  safeDelete(path.join(mongoData, 'WiredTiger.lock'));
+}
 
-const mongodb = startProcess('MongoDB', mongoCmd, ['--dbpath', `"${mongoData}"`, '--port', '27017']);
-const redis = startProcess('Redis', redisCmd, ['--port', '6379']);
-const postgres = startProcess('PostgreSQL', postgresCmd, ['-D', `"${postgresData}"`, '-p', '5433']);
+const lockFile = path.join(postgresData, 'postmaster.pid');
+safeDelete(lockFile);
+
+if (!fs.existsSync(mongoData)) {
+  fs.mkdirSync(mongoData, { recursive: true });
+}
+
+const mongodb = fs.existsSync(mongoBin)
+  ? startProcess('MongoDB', mongoBin, ['--dbpath', mongoData, '--port', '27017', '--bind_ip', '127.0.0.1'])
+  : null;
+
+const redis = fs.existsSync(redisBin)
+  ? startProcess('Redis', redisBin, ['--port', '6379', '--save', '', '--appendonly', 'no'])
+  : null;
+
+let postgres = null;
+if (fs.existsSync(postgresBin) && fs.existsSync(postgresData)) {
+  postgres = startProcess('PostgreSQL', postgresBin, ['-D', postgresData, '-p', '5433']);
+} else {
+  console.log('[System] PostgreSQL is not installed or configured locally; skipping PostgreSQL startup.');
+}
 
 let backend;
 let frontend;
 
-// Delay starting the frontend and backend slightly to allow MongoDB, Redis and Postgres to initialize
 setTimeout(() => {
-  backend = startProcess('Backend', 'pnpm', ['--filter', 'backend', 'dev']);
-  frontend = startProcess('Frontend', 'pnpm', ['--filter', 'frontend', 'dev']);
-}, 3000);
+  backend = startProcess('Backend', 'pnpm', ['--dir', 'apps/backend', 'dev']);
+  frontend = startProcess('Frontend', 'pnpm', ['--dir', 'apps/frontend', 'dev']);
+}, 2000);
 
 const cleanup = () => {
   console.log('\n[System] Stopping all servers and database services...');
   if (backend) backend.kill('SIGINT');
   if (frontend) frontend.kill('SIGINT');
-  mongodb.kill('SIGINT');
-  redis.kill('SIGINT');
-  postgres.kill('SIGINT');
-  
+  if (mongodb) mongodb.kill('SIGINT');
+  if (redis) redis.kill('SIGINT');
+  if (postgres) postgres.kill('SIGINT');
+
   setTimeout(() => {
     process.exit(0);
   }, 1000);
