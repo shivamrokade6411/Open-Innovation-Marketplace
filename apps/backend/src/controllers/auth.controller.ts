@@ -404,6 +404,15 @@ export async function getUserProfileById(req: Request, res: Response): Promise<v
       user = await User.findOne({ email: { $regex: '^' + idOrUsername + '@', $options: 'i' } }).lean();
     }
     if (!user) {
+      const githubHandle = idOrUsername.replace(/^@/, '');
+      const innovatorProfile = await InnovatorProfile.findOne({
+        portfolioLinks: { $elemMatch: { $regex: githubHandle, $options: 'i' } }
+      }).lean();
+      if (innovatorProfile) {
+        user = await User.findById(innovatorProfile.userId).lean();
+      }
+    }
+    if (!user) {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
     let profile = null;

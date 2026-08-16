@@ -100,7 +100,8 @@ export default function RegisterPage(): JSX.Element {
       if (registerThunk.fulfilled.match(action)) {
         dispatch(setCredentials(action.payload));
         triggerCelebration();
-        router.push('/dashboard');
+        const role = action.payload.user.role;
+        router.push(role === 'innovator' ? '/dashboard/profile' : role === 'company' ? '/company/dashboard' : '/admin');
       }
     } catch (submitError) {
       if (submitError instanceof z.ZodError) {
