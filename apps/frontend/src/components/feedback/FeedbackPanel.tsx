@@ -326,6 +326,7 @@ export default function FeedbackPanel({
               feedback={item}
               submissionId={submissionId}
               isMentor={isMentor}
+              currentUserId={currentUserId}
               onReply={() => {
                 setReplyingTo(item._id);
                 setShowForm(true);
@@ -344,12 +345,14 @@ function FeedbackThread({
   feedback,
   submissionId,
   isMentor,
+  currentUserId,
   onReply,
   onRefresh
 }: {
   feedback: Feedback;
   submissionId: string;
   isMentor: boolean;
+  currentUserId?: string;
   onReply: () => void;
   onRefresh: () => void;
 }) {
@@ -443,7 +446,7 @@ function FeedbackThread({
       )}
 
       {/* Reply Button */}
-      {isMentor && (
+      {(isMentor || currentUserId) && (
         <button
           onClick={onReply}
           className="text-xs text-purple-400 hover:text-purple-300 ml-4 font-medium"
