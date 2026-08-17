@@ -107,6 +107,7 @@ model User {
   id              String   @id @default(uuid())
   name            String
   email           String   @unique
+  username        String?  @unique
   passwordHash    String
   role            UserRole @default(PARTICIPANT)
   avatar          String?
@@ -115,6 +116,9 @@ model User {
   website         String?
   githubUrl       String?
   linkedinUrl     String?
+  twitterUrl      String?
+  portfolioUrl    String?
+  skills          String[] @default([])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
