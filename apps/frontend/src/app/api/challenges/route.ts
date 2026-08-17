@@ -59,15 +59,84 @@ export async function GET(request: Request) {
       take: query.limit
     });
 
-    return NextResponse.json(
-      ok({
-        items: challenges,
+    const mappedChallenges = challenges.map((c) => {
+      const statusMap: Record<string, string> = {
+        DRAFT: 'draft',
+        UPCOMING: 'active',
+        OPEN: 'active',
+        SUBMISSION_CLOSED: 'review',
+        JUDGING: 'review',
+        COMPLETED: 'completed',
+        CANCELLED: 'cancelled'
+      };
+
+      // Try to determine category from skills or title
+      let category = 'web';
+      const skillsList = c.skills.map((s) => s.skill.name.toLowerCase());
+      if (skillsList.some(s => s.includes('python') || s.includes('tensor') || s.includes('ai') || s.includes('ml'))) {
+        category = 'ai';
+      } else if (skillsList.some(s => s.includes('solidity') || s.includes('crypto') || s.includes('blockchain'))) {
+        category = 'blockchain';
+      } else if (skillsList.some(s => s.includes('figma') || s.includes('ux') || s.includes('design'))) {
+        category = 'design';
+      } else if (skillsList.some(s => s.includes('flutter') || s.includes('android') || s.includes('ios') || s.includes('mobile'))) {
+        category = 'mobile';
+      }
+
+      // Try to determine difficulty
+      let difficulty = 'medium';
+      if (c.title.toLowerCase().includes('easy') || c.shortDescription.toLowerCase().includes('easy')) {
+        difficulty = 'easy';
+      } else if (c.title.toLowerCase().includes('hard') || c.title.toLowerCase().includes('expert')) {
+        difficulty = 'hard';
+      }
+
+      return {
+        _id: c.id,
+        id: c.id,
+        title: c.title,
+        slug: c.slug,
+        description: c.shortDescription || c.description,
+        problemStatement: c.problemStatement,
+        category,
+        difficulty,
+        prizes: {
+          total: c.prizePool,
+          first: c.prizePool * 0.6,
+          second: c.prizePool * 0.3,
+          third: c.prizePool * 0.1
+        },
+        deadline: c.submissionDeadline,
+        startDate: c.registrationDeadline,
+        status: statusMap[c.status] || 'active',
+        techStack: c.skills.map((s) => s.skill.name),
+        requirements: [],
+        maxParticipants: 100,
+        currentParticipants: 10,
+        views: 120,
+        isRemote: true,
+        attachments: [],
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+        companyId: {
+          _id: c.company.id,
+          companyName: c.company.name,
+          logo: c.company.logo,
+          slug: c.company.slug
+        }
+      };
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: mappedChallenges,
+      meta: {
         page: query.page,
         limit: query.limit,
         total,
         hasMore: query.page * query.limit < total
-      })
-    );
+      }
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(fail('VALIDATION_ERROR', 'Invalid challenge query', error.flatten()), { status: 400 });

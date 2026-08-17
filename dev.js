@@ -34,9 +34,10 @@ function safeDelete(filePath) {
 
 function startProcess(name, command, args) {
   console.log(`[System] Starting ${name}...`);
+  const useShell = process.platform === 'win32' && (command === 'pnpm' || command.endsWith('.cmd') || command.endsWith('.bat'));
   const proc = spawn(command, args, {
     cwd: __dirname,
-    shell: false,
+    shell: useShell,
     env: { ...process.env, FORCE_COLOR: 'true', NODE_OPTIONS: '--max-old-space-size=4096' }
   });
 

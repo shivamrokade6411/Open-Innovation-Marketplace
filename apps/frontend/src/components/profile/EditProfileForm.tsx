@@ -23,7 +23,7 @@ const editProfileSchema = z.object({
     .trim()
     .min(3, 'Username must be at least 3 characters')
     .max(30, 'Username must be at most 30 characters')
-    .regex(/^[a-zA-Z0-9_-]+$, 'Username can only contain letters, numbers, hyphens, and underscores'),
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, hyphens, and underscores'),
   bio: z.string().trim().max(280, 'Bio must be at most 280 characters').optional().default(''),
   location: z.string().trim().max(100).optional().default(''),
   avatar: z.string().url().optional().default(''),

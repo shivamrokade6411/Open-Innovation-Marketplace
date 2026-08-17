@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { Card } from '../../components/ui/Card';
 import { Rocket, Trophy, Users, Briefcase, Sparkles, MessageSquare, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
+import { prisma } from '../../lib/prisma';
 
 const stats = [
   { label: 'Active Innovators', value: '48K+', icon: Users, color: 'text-indigo-400' },
@@ -47,23 +48,26 @@ export default async function HomePage(): Promise<JSX.Element> {
   let dynamicStats = { totalUsers: 0, totalCompanies: 0, totalChallenges: 0, totalSubmissions: 0 };
 
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000';
+    const [totalUsers, totalCompanies, totalChallenges, totalSubmissions, latestChallenge] = await Promise.all([
+      prisma.user.count(),
+      prisma.company.count(),
+      prisma.challenge.count(),
+      prisma.submission.count(),
+      prisma.challenge.findFirst({
+        where: { status: 'OPEN' },
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
 
-    const statsRes = await fetch(`${backendUrl}/api/platform-stats`, { next: { revalidate: 60 } });
-    if (statsRes.ok) {
-      const statsJson = await statsRes.json();
-      if (statsJson.success && statsJson.data) {
-        dynamicStats = statsJson.data;
-      }
-    }
+    dynamicStats = {
+      totalUsers,
+      totalCompanies,
+      totalChallenges,
+      totalSubmissions
+    };
 
-    const challengesRes = await fetch(`${backendUrl}/api/challenges`, { next: { revalidate: 60 } });
-    if (challengesRes.ok) {
-      const challengesJson = await challengesRes.json();
-      if (challengesJson.success && Array.isArray(challengesJson.data) && challengesJson.data.length > 0) {
-        const firstChallenge = challengesJson.data[0];
-        latestChallengeSlug = firstChallenge.slug;
-      }
+    if (latestChallenge) {
+      latestChallengeSlug = latestChallenge.slug;
     }
   } catch (err) {
     console.error('Failed to load homepage dynamic data:', err);

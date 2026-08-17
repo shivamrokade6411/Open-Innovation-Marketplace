@@ -148,7 +148,7 @@ export default function ChallengesPage(): JSX.Element {
         params.append('deadlineBefore', d.toISOString());
       }
 
-      const res = await fetch(`${backendUrl}/api/challenges?${params.toString()}`);
+      const res = await fetch(`/api/challenges?${params.toString()}`);
       if (!res.ok) {
         throw new Error('Network response was not ok');
       }
